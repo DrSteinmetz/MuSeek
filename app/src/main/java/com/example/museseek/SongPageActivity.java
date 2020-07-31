@@ -17,9 +17,10 @@ public class SongPageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song_page);
 
-        String photoURL = getIntent().getStringExtra("photo_url");
+        String photoURL = getIntent().getStringExtra("photo_path");
         String name = getIntent().getStringExtra("name");
         String artist = getIntent().getStringExtra("artist");
+        boolean isPhotoFromURL = getIntent().getBooleanExtra("is_url", false);
 
         ImageView photoIv = findViewById(R.id.details_iv);
         TextView nameTv = findViewById(R.id.details_name_tv);
@@ -34,7 +35,7 @@ public class SongPageActivity extends AppCompatActivity {
                 apply(options).
                 into(photoIv);
 
-        nameTv.setText(nameTv.getText() + name);
-        artistTv.setText(artistTv.getText() + artist);
+        nameTv.setText(name);
+        artistTv.setText(artist);
     }
 }

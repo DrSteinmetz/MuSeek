@@ -3,10 +3,13 @@ package com.example.museseek;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
     private final String SONG_PATH = "songs";
 
+    private boolean isDarkMode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,8 +38,15 @@ public class MainActivity extends AppCompatActivity {
 
         mSharedPreferences = getSharedPreferences("user_pref", MODE_PRIVATE);
 
+        /**<-------Initializing dark\light mode------->**/
+        isDarkMode = mSharedPreferences.getBoolean("is_dark_mode", false);
+        if (isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+
         checkIfFirstUseOfApp();
 
+        /**<-------Initializing the RecyclerView------->**/
         RecyclerView recyclerView = findViewById(R.id.recycler_view_layout);
         recyclerView.setHasFixedSize(true);
 
@@ -46,9 +58,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSongClicked(int position, View view) {
                 Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
-                intent.putExtra("photo_url", songs.get(position).getmPhotoPath());
+                intent.putExtra("photo_path", songs.get(position).getmPhotoPath());
                 intent.putExtra("name", songs.get(position).getmName());
                 intent.putExtra("artist", songs.get(position).getmArtist());
+                intent.putExtra("is_url", songs.get(position).isPhotoFromURL());
                 startActivity(intent);
             }
 
@@ -94,8 +107,33 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(songAdapter);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.options_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.dark_mode_op) {
+            if (isDarkMode) {
+                isDarkMode = false;
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            } else {
+                isDarkMode = true;
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            }
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     public void checkIfFirstUseOfApp() {
         if (mSharedPreferences.getBoolean("is_first_use", true)) {
+            /**<-------If it's the first time the user opens the app,
+             *         initialize the app with these 3 songs------->**/
+
             Song song_0 = new Song("One More Cup Of Coffee", "Bob Dylan",
                     "http://www.syntax.org.il/xtra/bob.m4a",
                     "https://www.needsomefun.net/wp-content/uploads/2015/09/one_more_cup_of_cofee.jpg");
@@ -167,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
 
+        mSharedPreferences.edit().putBoolean("is_dark_mode", isDarkMode).commit();
         saveSongsToFile();
     }
 }

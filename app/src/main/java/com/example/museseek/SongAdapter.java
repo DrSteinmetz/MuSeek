@@ -91,8 +91,8 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                 apply(options).
                 into(holder.photoIv);
 
-        holder.nameTv.setText(holder.nameTv.getText() + song.getmName());
-        holder.artistTv.setText(holder.artistTv.getText() + song.getmArtist());
+        holder.nameTv.setText(song.getmName());
+        holder.artistTv.setText(song.getmArtist());
     }
 
     @Override
