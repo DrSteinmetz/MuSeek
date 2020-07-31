@@ -9,6 +9,16 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_above="@id/control_bar"/>
+
+    <RelativeLayout
+        android:id="@+id/control_bar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/colorPrimary"
+        android:layout_alignParentBottom="true">
+
+    </RelativeLayout>
 
 </RelativeLayout>

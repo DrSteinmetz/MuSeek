@@ -1,14 +1,15 @@
 package com.example.museseek;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.view.View;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -44,6 +45,11 @@ public class MainActivity extends AppCompatActivity {
         songAdapter.setListener(new SongAdapter.SongListener() {
             @Override
             public void onSongClicked(int position, View view) {
+                Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
+                intent.putExtra("photo_url", songs.get(position).getmPhotoPath());
+                intent.putExtra("name", songs.get(position).getmName());
+                intent.putExtra("artist", songs.get(position).getmArtist());
+                startActivity(intent);
             }
 
             @Override
@@ -51,12 +57,21 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(0,
-                ItemTouchHelper.LEFT|ItemTouchHelper.RIGHT) {
+        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView,
                                   @NonNull RecyclerView.ViewHolder viewHolder,
                                   @NonNull RecyclerView.ViewHolder target) {
+                final int from = viewHolder.getAdapterPosition();
+                final int to = target.getAdapterPosition();
+
+                Song song = songs.remove(from);
+                songs.add(to, song);
+
+                songAdapter.notifyItemMoved(from, to);
+
                 return false;
             }
 
@@ -64,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 if (direction == ItemTouchHelper.RIGHT) {
                     //TODO: Action on right swipe
+                    songAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
                 } else if (direction == ItemTouchHelper.LEFT) {
                     songs.remove(viewHolder.getAdapterPosition());
                     songAdapter.notifyItemRemoved(viewHolder.getAdapterPosition());
@@ -95,11 +111,29 @@ public class MainActivity extends AppCompatActivity {
                     "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
             song_2.setIsPhotoFromURL(true);
 
+            Song song_3 = new Song("The Man In Me", "Bob Dylan",
+                    "http://www.syntax.org.il/xtra/bob2.mp3",
+                    "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
+            song_2.setIsPhotoFromURL(true);
+            Song song_4 = new Song("The Man In Me", "Bob Dylan",
+                    "http://www.syntax.org.il/xtra/bob2.mp3",
+                    "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
+            song_2.setIsPhotoFromURL(true);
+            Song song_5 = new Song("The Man In Me", "Bob Dylan",
+                    "http://www.syntax.org.il/xtra/bob2.mp3",
+                    "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
+            song_2.setIsPhotoFromURL(true);
+
             songs.add(song_0);
             songs.add(song_1);
             songs.add(song_2);
+            songs.add(song_3);
+            songs.add(song_4);
+            songs.add(song_5);
 
             mSharedPreferences.edit().putBoolean("is_first_use", false).commit();
+
+            saveSongsToFile(); //Remove to onPause when done developing!!!!!!!!
         } else {
             readSongsFromFile();
         }
@@ -131,8 +165,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        saveSongsToFile();
-
         super.onPause();
+
+        saveSongsToFile();
     }
 }
