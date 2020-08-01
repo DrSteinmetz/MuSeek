@@ -1,15 +1,22 @@
 package com.example.museseek;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.NotificationCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,6 +32,10 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private SharedPreferences mSharedPreferences;
+
+    private NotificationManager notificationManager;
+    private final int NOTIFICATION_ID = 1;
+
     private List<Song> songs = new ArrayList<>();
 
     private final String SONG_PATH = "songs";
@@ -45,6 +56,39 @@ public class MainActivity extends AppCompatActivity {
         } else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         checkIfFirstUseOfApp();
+
+
+        /**<-------Initializing notification------->**/
+        notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        String channelID = null;
+        if (Build.VERSION.SDK_INT >= 26) {
+            channelID = "music_channel_id";
+            CharSequence channelName = "MuSeek_Channel";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel notificationChannel = new NotificationChannel(channelID, channelName, importance);
+            notificationChannel.enableLights(false);
+            notificationChannel.enableVibration(false);
+
+            notificationManager.createNotificationChannel(notificationChannel);
+        }
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, channelID);
+        builder.setSmallIcon(R.drawable.ic_round_music_note_white_100).
+                setPriority(Notification.PRIORITY_MAX);
+        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
+        Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
+        intent.putExtra("name", "notification");
+        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,
+                0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        remoteViews.setOnClickPendingIntent(R.id.notif_play_btn, pendingIntent);
+
+        builder.setContent(remoteViews);
+        //builder.setCustomBigContentView(remoteViews);
+
+        Notification notification = builder.build();
+        notification.defaults = Notification.DEFAULT_VIBRATE;
+        notification.flags |= Notification.FLAG_NO_CLEAR;
+        notificationManager.notify(NOTIFICATION_ID, notification);
+
 
         /**<-------Initializing the RecyclerView------->**/
         RecyclerView recyclerView = findViewById(R.id.recycler_view_layout);

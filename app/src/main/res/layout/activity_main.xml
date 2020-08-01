@@ -16,9 +16,59 @@
     <RelativeLayout
         android:id="@+id/control_bar"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="55dp"
         android:background="@color/colorPrimary"
         android:layout_alignParentBottom="true">
+
+        <ImageButton
+            android:id="@+id/previous_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignTop="@id/space"
+            android:layout_toStartOf="@id/pause_btn"
+            android:src="@drawable/ic_round_fast_forward_white_100"
+            android:background="@color/colorTransparent"
+            android:scaleType="fitXY"
+            android:rotation="180"/>
+
+        <ImageButton
+            android:id="@+id/pause_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignTop="@id/space"
+            android:layout_toStartOf="@id/space"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/ic_round_pause_white_100"
+            android:background="@color/colorTransparent"
+            android:scaleType="fitXY"/>
+
+        <Space
+            android:id="@+id/space"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_centerInParent="true"
+            android:layout_marginHorizontal="5dp"/>
+
+        <ImageButton
+            android:id="@+id/play_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignTop="@id/space"
+            android:layout_toEndOf="@id/space"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/ic_round_play_arrow_white_100"
+            android:background="@color/colorTransparent"
+            android:scaleType="fitXY"/>
+
+        <ImageButton
+            android:id="@+id/next_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignTop="@id/space"
+            android:layout_toEndOf="@id/play_btn"
+            android:src="@drawable/ic_round_fast_forward_white_100"
+            android:background="@color/colorTransparent"
+            android:scaleType="fitXY"/>
 
     </RelativeLayout>
 

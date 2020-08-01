@@ -2,4 +2,5 @@
     <string name="app_name">MuSeek</string>
 
     <string name="dark_mode">Dark Mode</string>
+    <string name="add_song">Add Song</string>
 </resources>

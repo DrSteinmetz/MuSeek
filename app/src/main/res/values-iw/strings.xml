@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MuSeek</string>
+
+    <string name="dark_mode">מצב לילה</string>
+    <string name="add_song">הוסף שיר</string>
+</resources>
