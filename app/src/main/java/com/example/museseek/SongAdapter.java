@@ -87,12 +87,12 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                 error(R.mipmap.ic_launcher_round);
 
         Glide.with(context).
-                load(song.getmPhotoPath()).
+                load(song.getPhotoPath()).
                 apply(options).
                 into(holder.photoIv);
 
-        holder.nameTv.setText(song.getmName());
-        holder.artistTv.setText(song.getmArtist());
+        holder.nameTv.setText(song.getName());
+        holder.artistTv.setText(song.getArtist());
     }
 
     @Override

@@ -5,54 +5,54 @@ import java.io.Serializable;
 public class Song implements Serializable {
     private String mName;
     private String mArtist;
-    private String mSongLink;
+    private String mSongURL;
     private String mPhotoPath;
-    private boolean isPhotoFromURL;
+    private boolean mIsPhotoFromURL;
 
-    public Song(String name, String artist, String songLink, String photoPath) {
+    public Song(String name, String artist, String songURL, String photoPath) {
         this.mName = name;
         this.mArtist = artist;
-        this.mSongLink = songLink;
+        this.mSongURL = songURL;
         this.mPhotoPath = photoPath;
     }
 
-    public String getmName() {
+    public String getName() {
         return mName;
     }
 
-    public void setmName(String mName) {
-        this.mName = mName;
+    public void setName(String name) {
+        this.mName = name;
     }
 
-    public String getmArtist() {
+    public String getArtist() {
         return mArtist;
     }
 
-    public void setmArtist(String mArtist) {
-        this.mArtist = mArtist;
+    public void setArtist(String artist) {
+        this.mArtist = artist;
     }
 
-    public String getmSongLink() {
-        return mSongLink;
+    public String getSongURL() {
+        return mSongURL;
     }
 
-    public void setmSongLink(String mSongLink) {
-        this.mSongLink = mSongLink;
+    public void setSongURL(String songURL) {
+        this.mSongURL = songURL;
     }
 
-    public String getmPhotoPath() {
+    public String getPhotoPath() {
         return mPhotoPath;
     }
 
-    public void setmPhotoPath(String mPhotoPath) {
-        this.mPhotoPath = mPhotoPath;
+    public void setPhotoPath(String photoPath) {
+        this.mPhotoPath = photoPath;
     }
 
     public boolean isPhotoFromURL() {
-        return isPhotoFromURL;
+        return mIsPhotoFromURL;
     }
 
     public void setIsPhotoFromURL(boolean photoFromURL) {
-        isPhotoFromURL = photoFromURL;
+        mIsPhotoFromURL = photoFromURL;
     }
 }

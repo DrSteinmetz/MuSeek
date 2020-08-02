@@ -24,6 +24,8 @@
         <activity android:name=".SongPageActivity"
             android:launchMode="singleTask"/>
 
+        <service android:name=".MusicService"/>
+
         <provider
             android:authorities="com.example.museseek.provider"
             android:name="androidx.core.content.FileProvider"

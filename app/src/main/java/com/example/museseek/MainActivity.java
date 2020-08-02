@@ -1,22 +1,26 @@
 package com.example.museseek;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.os.Build;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.RemoteViews;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.app.NotificationCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,63 +35,109 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private MusicService mService;
+    private boolean mIsBound = false;
+
     private SharedPreferences mSharedPreferences;
 
-    private NotificationManager notificationManager;
-    private final int NOTIFICATION_ID = 1;
+    SongAdapter songAdapter;
+    private List<Song> mSongs = new ArrayList<>();
 
-    private List<Song> songs = new ArrayList<>();
+    ImageButton play_btn;
+    ImageButton next_btn;
+    ImageButton prev_btn;
 
     private final String SONG_PATH = "songs";
 
-    private boolean isDarkMode;
+    private boolean mIsDarkMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        doBindService();
+
         mSharedPreferences = getSharedPreferences("user_pref", MODE_PRIVATE);
 
+
         /**<-------Initializing dark\light mode------->**/
-        isDarkMode = mSharedPreferences.getBoolean("is_dark_mode", false);
-        if (isDarkMode) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        } else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        mIsDarkMode = mSharedPreferences.getBoolean("is_dark_mode", false);
+        if (mIsDarkMode) {
+            findViewById(R.id.main_layout).setBackgroundColor(getColor(R.color.colorGrey));
+        } else {
+            findViewById(R.id.main_layout).setBackgroundColor(getColor(R.color.colorAccent));
+        }
 
         checkIfFirstUseOfApp();
 
-
-        /**<-------Initializing notification------->**/
-        notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        String channelID = null;
-        if (Build.VERSION.SDK_INT >= 26) {
-            channelID = "music_channel_id";
-            CharSequence channelName = "MuSeek_Channel";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel notificationChannel = new NotificationChannel(channelID, channelName, importance);
-            notificationChannel.enableLights(false);
-            notificationChannel.enableVibration(false);
-
-            notificationManager.createNotificationChannel(notificationChannel);
+        /**<-------Initializing songs urls array------->**/
+        final ArrayList<String> songsURL = new ArrayList<>();
+        for (Song song : mSongs) {
+            songsURL.add(song.getSongURL());
         }
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, channelID);
-        builder.setSmallIcon(R.drawable.ic_round_music_note_white_100).
-                setPriority(Notification.PRIORITY_MAX);
-        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
-        Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
-        intent.putExtra("name", "notification");
-        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,
-                0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.notif_play_btn, pendingIntent);
 
-        builder.setContent(remoteViews);
-        //builder.setCustomBigContentView(remoteViews);
 
-        Notification notification = builder.build();
-        notification.defaults = Notification.DEFAULT_VIBRATE;
-        notification.flags |= Notification.FLAG_NO_CLEAR;
-        notificationManager.notify(NOTIFICATION_ID, notification);
+        /**<-------Initializing the RecyclerView------->**/
+        play_btn = findViewById(R.id.play_btn);
+        next_btn = findViewById(R.id.next_btn);
+        prev_btn = findViewById(R.id.previous_btn);
+
+        play_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService.isPlaying()) {
+                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+
+                    Intent intent = new Intent(MainActivity.this, MusicService.class);
+                    intent.putExtra("action", "play");
+                    startService(intent);
+                } else {
+                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+
+                    Intent intent = new Intent(MainActivity.this, MusicService.class);
+                    if (!mService.isInitialized()) {
+                        View view = getLayoutInflater().inflate(R.layout.notification_layout, null);
+                        ImageButton notifPlayBtn = view.findViewById(R.id.notif_play_btn);
+                        mService.setPlayBtn(play_btn);
+                        mService.setNotifPlayBtn(notifPlayBtn);
+
+                        /**<-------Initializing Music Service------->**/
+                        intent.putExtra("songs_url", songsURL);
+                        intent.putExtra("action", "initial");
+                    } else {
+                        intent.putExtra("action", "play");
+                    }
+                    startService(intent);
+                }
+            }
+        });
+
+        next_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService.isInitialized()) {
+                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+
+                    Intent intent = new Intent(MainActivity.this, MusicService.class);
+                    intent.putExtra("action", "next");
+                    startService(intent);
+                }
+            }
+        });
+
+        prev_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService.isInitialized()) {
+                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+
+                    Intent intent = new Intent(MainActivity.this, MusicService.class);
+                    intent.putExtra("action", "previous");
+                    startService(intent);
+                }
+            }
+        });
 
 
         /**<-------Initializing the RecyclerView------->**/
@@ -96,16 +146,17 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        final SongAdapter songAdapter = new SongAdapter(songs, this);
+        songAdapter = new SongAdapter(mSongs, this);
 
         songAdapter.setListener(new SongAdapter.SongListener() {
             @Override
             public void onSongClicked(int position, View view) {
                 Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
-                intent.putExtra("photo_path", songs.get(position).getmPhotoPath());
-                intent.putExtra("name", songs.get(position).getmName());
-                intent.putExtra("artist", songs.get(position).getmArtist());
-                intent.putExtra("is_url", songs.get(position).isPhotoFromURL());
+                intent.putExtra("photo_path", mSongs.get(position).getPhotoPath());
+                intent.putExtra("name", mSongs.get(position).getName());
+                intent.putExtra("artist", mSongs.get(position).getArtist());
+                intent.putExtra("is_url", mSongs.get(position).isPhotoFromURL());
+                intent.putExtra("is_dark", mIsDarkMode);
                 startActivity(intent);
             }
 
@@ -124,8 +175,8 @@ public class MainActivity extends AppCompatActivity {
                 final int from = viewHolder.getAdapterPosition();
                 final int to = target.getAdapterPosition();
 
-                Song song = songs.remove(from);
-                songs.add(to, song);
+                Song song = mSongs.remove(from);
+                mSongs.add(to, song);
 
                 songAdapter.notifyItemMoved(from, to);
 
@@ -133,14 +184,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            public void onSwiped(@NonNull final RecyclerView.ViewHolder viewHolder, int direction) {
                 if (direction == ItemTouchHelper.RIGHT) {
                     //TODO: Action on right swipe
                     songAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
                 } else if (direction == ItemTouchHelper.LEFT) {
-                    songs.remove(viewHolder.getAdapterPosition());
-                    songAdapter.notifyItemRemoved(viewHolder.getAdapterPosition());
-                    //TODO: Add a confirmation dialog on song delete
+                    showSongDeletionDialog(viewHolder.getAdapterPosition());
                 }
             }
         };
@@ -149,6 +198,31 @@ public class MainActivity extends AppCompatActivity {
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
         recyclerView.setAdapter(songAdapter);
+    }
+
+    /**<-------Initializing MusicService connection methods------->**/
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mService = ((MusicService.ServiceBinder) service).getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+        }
+    };
+
+    private void doBindService() {
+        bindService(new Intent(this, MusicService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+        mIsBound = true;
+    }
+
+    private void doUnbindService() {
+        if (mIsBound) {
+            unbindService(serviceConnection);
+            mIsBound = false;
+        }
     }
 
     @Override
@@ -160,14 +234,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.dark_mode_op) {
-            if (isDarkMode) {
-                isDarkMode = false;
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            if (mIsDarkMode) {
+                mIsDarkMode = false;
+                findViewById(R.id.main_layout).setBackgroundColor(getColor(R.color.colorAccent));
             } else {
-                isDarkMode = true;
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                mIsDarkMode = true;
+                findViewById(R.id.main_layout).setBackgroundColor(getColor(R.color.colorGrey));
             }
             return true;
+        } else if (item.getItemId() == R.id.add_song_op) {
+            Toast.makeText(this, "Song Added", Toast.LENGTH_SHORT).show();
         }
 
         return super.onOptionsItemSelected(item);
@@ -206,12 +282,12 @@ public class MainActivity extends AppCompatActivity {
                     "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
             song_2.setIsPhotoFromURL(true);
 
-            songs.add(song_0);
-            songs.add(song_1);
-            songs.add(song_2);
-            songs.add(song_3);
-            songs.add(song_4);
-            songs.add(song_5);
+            mSongs.add(song_0);
+            mSongs.add(song_1);
+            mSongs.add(song_2);
+            mSongs.add(song_3);
+            mSongs.add(song_4);
+            mSongs.add(song_5);
 
             mSharedPreferences.edit().putBoolean("is_first_use", false).commit();
 
@@ -225,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             FileInputStream fileInputStream = openFileInput(SONG_PATH);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            songs = (ArrayList<Song>) objectInputStream.readObject();
+            mSongs = (ArrayList<Song>) objectInputStream.readObject();
             objectInputStream.close();
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
@@ -236,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             FileOutputStream fileOutputStream = openFileOutput(SONG_PATH, MODE_PRIVATE);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(songs);
+            objectOutputStream.writeObject(mSongs);
             objectOutputStream.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -245,11 +321,128 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    void showSongDeletionDialog(final int songPosition) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogTheme);
+        View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_song_deletion,
+                (RelativeLayout) findViewById(R.id.layoutDialogContainer));
+
+        builder.setView(view);
+        builder.setCancelable(false);
+
+        final EditText editText = view.findViewById(R.id.user_name_et);
+        final ImageButton btn_cancel = view.findViewById(R.id.btn_cancel);
+        final ImageButton btn_confirm = view.findViewById(R.id.btn_confirm);
+
+        final AlertDialog alertDialog = builder.create();
+
+        btn_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                songAdapter.notifyItemChanged(songPosition);
+                alertDialog.dismiss();
+            }
+        });
+
+        btn_confirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**<-------Saves the user's score------->*/
+                mSongs.remove(songPosition);
+                songAdapter.notifyItemRemoved(songPosition);
+                alertDialog.dismiss();
+            }
+        });
+
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+        }
+
+        alertDialog.show();
+    }
+
+    void showSongAddingDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogTheme);
+        View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_add_song,
+                (RelativeLayout) findViewById(R.id.layoutDialogContainer));
+
+        builder.setView(view);
+        builder.setCancelable(false);
+
+        final EditText editText = view.findViewById(R.id.user_name_et);
+        final ImageButton btn_cancel = view.findViewById(R.id.btn_cancel);
+        final ImageButton btn_confirm = view.findViewById(R.id.btn_confirm);
+
+        final AlertDialog alertDialog = builder.create();
+
+        btn_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+            }
+        });
+
+        btn_confirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**<-------Saves the user's score------->*/
+                alertDialog.dismiss();
+            }
+        });
+
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+        }
+
+        alertDialog.show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        /**<-------Setting the play/pause button according to the Music service------->**/
+        if (mService != null) {
+            if (mService.isPlaying()) {
+                Log.d("onResume", "Playing");
+                play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+            } else {
+                play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                Log.d("onResume", "NOT Playing");
+            }
+        } else {
+            Log.d("onResume", "Service is null");
+            play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (!mIsBound) {
+            doBindService();
+        }
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
 
-        mSharedPreferences.edit().putBoolean("is_dark_mode", isDarkMode).commit();
+        mSharedPreferences.edit().putBoolean("is_dark_mode", mIsDarkMode).commit();
         saveSongsToFile();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (mIsBound) {
+            doUnbindService();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 }

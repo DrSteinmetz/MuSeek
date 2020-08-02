@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/layoutDialogContainer"
+    android:layout_margin="20dp"
+    android:padding="20dp">
+
+    <RelativeLayout
+        android:id="@+id/layoutDialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dialog_background"
+        android:layout_centerHorizontal="true">
+
+        <TextView
+            android:id="@+id/txt_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="50dp"
+            android:padding="10dp"
+            android:text="Are you sure you want to delete the song?"
+            android:textSize="25sp"
+            android:textColor="@color/colorAccent"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"/>
+
+    </RelativeLayout>
+
+
+    <ImageButton
+        android:id="@+id/btn_cancel"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignBottom="@id/btn_dummy"
+        android:layout_toStartOf="@id/btn_dummy"
+        android:src="@drawable/ic_round_pause_white_100"
+        android:background="@color/colorTransparent"
+        android:scaleType="fitCenter"/>
+
+    <ImageView
+        android:id="@+id/btn_dummy"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_alignBottom="@id/layoutDialog"
+        android:layout_marginBottom="-23dp"
+        android:layout_marginHorizontal="25dp"
+        android:layout_centerHorizontal="true"/>
+
+    <ImageButton
+        android:id="@+id/btn_confirm"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignBottom="@id/btn_dummy"
+        android:layout_toEndOf="@id/btn_dummy"
+        android:src="@drawable/ic_round_play_arrow_white_100"
+        android:background="@color/colorTransparent"
+        android:scaleType="fitCenter"/>
+
+</RelativeLayout>

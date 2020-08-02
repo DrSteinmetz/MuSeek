@@ -22,6 +22,12 @@ public class SongPageActivity extends AppCompatActivity {
         String artist = getIntent().getStringExtra("artist");
         boolean isPhotoFromURL = getIntent().getBooleanExtra("is_url", false);
 
+        if (getIntent().getBooleanExtra("is_dark", false)) {
+            findViewById(R.id.song_page_layout).setBackgroundColor(getColor(R.color.colorGrey));
+        } else {
+            findViewById(R.id.song_page_layout).setBackgroundColor(getColor(R.color.colorAccent));
+        }
+
         ImageView photoIv = findViewById(R.id.details_iv);
         TextView nameTv = findViewById(R.id.details_name_tv);
         TextView artistTv = findViewById(R.id.details_artist_tv);
