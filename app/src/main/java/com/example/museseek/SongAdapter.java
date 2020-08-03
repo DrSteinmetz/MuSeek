@@ -1,13 +1,17 @@
 package com.example.museseek;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -39,6 +43,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         ImageView photoIv;
         TextView nameTv;
         TextView artistTv;
+        CardView layout;
 
         public SongViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -46,6 +51,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             photoIv = itemView.findViewById(R.id.photo_iv);
             nameTv = itemView.findViewById(R.id.name_tv);
             artistTv = itemView.findViewById(R.id.artist_tv);
+            layout = itemView.findViewById(R.id.card_layout);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -81,18 +87,27 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
         Song song = songs.get(position);
 
-        RequestOptions options = new RequestOptions().
-                centerCrop().
-                placeholder(R.mipmap.ic_launcher_round).
-                error(R.mipmap.ic_launcher_round);
+        if (song.getPhotoPath() != null && song.getPhotoPath().trim().length() > 0) {
+            RequestOptions options = new RequestOptions().
+                    circleCrop().
+                    placeholder(R.mipmap.ic_launcher_round).
+                    error(R.mipmap.ic_launcher_round);
 
-        Glide.with(context).
-                load(song.getPhotoPath()).
-                apply(options).
-                into(holder.photoIv);
+            Glide.with(context).
+                    load(song.getPhotoPath()).
+                    apply(options).
+                    into(holder.photoIv);
+        }
 
         holder.nameTv.setText(song.getName());
         holder.artistTv.setText(song.getArtist());
+
+
+        if (position == MusicService.getCurrentSongPosition()) {
+            holder.layout.setBackgroundColor(context.getResources().getColor(R.color.colorPurple2, null));
+        } else {
+            holder.layout.setBackgroundColor(context.getResources().getColor(R.color.colorTransparent, null));
+        }
     }
 
     @Override

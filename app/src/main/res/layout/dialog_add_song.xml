@@ -10,6 +10,7 @@
         android:id="@+id/layoutDialog"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/dialog_background"
         android:layout_centerHorizontal="true">
 
         <TextView
@@ -18,58 +19,146 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             android:padding="10dp"
-            android:text="Dialog Title"
+            android:text="Add New Song!"
             android:textSize="25sp"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/colorAccent"
             android:textStyle="bold"
             android:textAllCaps="false"
             android:gravity="center"
             android:layout_centerHorizontal="true"/>
 
         <TextView
-            android:id="@+id/txt_message_1"
+            android:id="@+id/song_name_tv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/txt_title"
             android:layout_marginHorizontal="20dp"
-            android:text="TV_1"
-            style=""
-            android:textStyle="bold|italic"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"/>
-
-        <TextView
-            android:id="@+id/txt_message_2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/txt_message_1"
-            android:layout_marginTop="40dp"
-            android:layout_marginHorizontal="20dp"
-            android:text="TV_2"
+            android:text="Song Name"
             android:textSize="20sp"
-            android:textAllCaps="false"
             android:textColor="@color/colorPrimaryDark"
+            android:textStyle="italic"
+            android:textAllCaps="false"
             android:gravity="center"
             android:layout_centerHorizontal="true"/>
-
         <EditText
-            android:id="@+id/user_name_et"
+            android:id="@+id/song_name_et"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/txt_message_2"
+            android:layout_below="@id/song_name_tv"
             android:padding="10dp"
             android:layout_marginTop="5dp"
-            android:layout_marginBottom="50dp"
+            android:layout_marginBottom="10dp"
             android:layout_marginHorizontal="20dp"
-            android:hint="ET"
+            android:hint="Please Enter song's name..."
             android:textSize="20sp"
             android:textColor="@color/colorPrimary"
-            android:background="@color/colorPrimary"
+            android:background="@drawable/view_selector"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"
+            android:maxLines="1"/>
+
+        <TextView
+            android:id="@+id/song_artist_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/song_name_et"
+            android:layout_marginHorizontal="20dp"
+            android:text="Artist Name"
+            android:textSize="20sp"
+            android:textColor="@color/colorPrimaryDark"
+            android:textStyle="italic"
+            android:textAllCaps="false"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"/>
+        <EditText
+            android:id="@+id/song_artist_et"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/song_artist_tv"
+            android:padding="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginHorizontal="20dp"
+            android:hint="Please Enter the artist..."
+            android:textSize="20sp"
+            android:textColor="@color/colorPrimary"
+            android:background="@drawable/view_selector"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"
+            android:maxLines="1"/>
+
+        <TextView
+            android:id="@+id/song_url_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/song_artist_et"
+            android:layout_marginHorizontal="20dp"
+            android:text="Song's Link"
+            android:textSize="20sp"
+            android:textColor="@color/colorPrimaryDark"
+            android:textStyle="italic"
+            android:textAllCaps="false"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"/>
+        <EditText
+            android:id="@+id/song_url_et"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/song_url_tv"
+            android:padding="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginHorizontal="20dp"
+            android:hint="Please Enter the song's URL..."
+            android:textSize="20sp"
+            android:textColor="@color/colorPrimary"
+            android:background="@drawable/view_selector"
             android:gravity="center"
             android:layout_centerHorizontal="true"
             android:maxLines="1"
-            android:inputType="textPersonName"/>
-        <!--^^ on the background needs to be selector ^^-->
+            android:inputType="textUri"/>
+
+        <TextView
+            android:id="@+id/take_pic_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/song_url_et"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="10dp"
+            android:text="Pick the Song's Image"
+            android:textSize="20sp"
+            android:textColor="@color/colorPrimaryDark"
+            android:textStyle="italic"
+            android:textAllCaps="false"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_below="@id/take_pic_tv"
+            android:layout_marginBottom="50dp"
+            android:gravity="center">
+
+            <ImageButton
+                android:id="@+id/btn_gallery"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginEnd="30dp"
+                android:src="@drawable/ic_twotone_image_search_white_100"
+                android:background="@color/colorTransparent"
+                android:scaleType="fitCenter"/>
+
+            <ImageButton
+                android:id="@+id/btn_camera"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/ic_twotone_photo_camera_white_100"
+                android:background="@color/colorTransparent"
+                android:scaleType="fitXY"/>
+
+        </LinearLayout>
 
     </RelativeLayout>
 

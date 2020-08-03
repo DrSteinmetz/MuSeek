@@ -4,4 +4,5 @@
 
     <string name="dark_mode">מצב לילה</string>
     <string name="add_song">הוסף שיר</string>
+    <string name="dialog_deletion_title">אנא אשר/י כי ברצונך למחוק שיר זה</string>
 </resources>

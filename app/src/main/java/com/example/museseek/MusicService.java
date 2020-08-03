@@ -17,8 +17,12 @@ import android.widget.RemoteViews;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.NotificationTarget;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MusicService extends Service
         implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener {
@@ -27,16 +31,19 @@ public class MusicService extends Service
 
     private final IBinder mBinder = new ServiceBinder();
 
-    private ArrayList<String> mSongs = new ArrayList<>();
+    private List<Song> mSongs = new ArrayList<>();
     private static int currentSongPosition = 0;
 
+    NotificationManager mNotificationManager;
+    RemoteViews mRemoteViews;
+    Notification mNotification;
     final int NOTIFICATION_ID = 1;
 
     private boolean mIsInitialized = false;
     private boolean mIsPlaying = false;
 
     private ImageButton mPlayBtn;
-    private ImageButton mNotifPlayBtn;
+    private SongAdapter songAdapter;
 
     public MusicService() {
     }
@@ -71,12 +78,17 @@ public class MusicService extends Service
         if (mediaPlayer != null) {
             switch (action) {
                 case "initial":
-                    mSongs = intent.getStringArrayListExtra("songs_url");
                     try {
-                        mediaPlayer.setDataSource(mSongs.get(currentSongPosition));
-                        mediaPlayer.prepareAsync();
-                        createNotification();
-                        mIsInitialized = true;
+                        if (!mIsInitialized) {
+                            mediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
+                            mediaPlayer.prepareAsync();
+                            createNotification();
+                            mIsInitialized = true;
+                        } else {
+                            mediaPlayer.reset();
+                            mediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
+                            mediaPlayer.prepareAsync();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -88,21 +100,19 @@ public class MusicService extends Service
                             if (mPlayBtn != null) {
                                 mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
                             }
-                            if (mNotifPlayBtn != null) {
-                                mNotifPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_grey_24));
-                                //need to rebuild the notification for changing the image
-                            }
+                            mRemoteViews.setImageViewResource(R.id.notif_play_btn,
+                                    R.drawable.ic_round_play_arrow_grey_24);
                         }
                     } else {
                         if (play()) {
                             if (mPlayBtn != null) {
                                 mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
                             }
-                            if (mNotifPlayBtn != null) {
-                                mNotifPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_grey_24));
-                            }
+                            mRemoteViews.setImageViewResource(R.id.notif_play_btn,
+                                    R.drawable.ic_round_pause_grey_24);
                         }
                     }
+                    mNotificationManager.notify(NOTIFICATION_ID, mNotification);
                     break;
 
                 case "next":
@@ -120,8 +130,8 @@ public class MusicService extends Service
                     break;
 
                 case "close":
-                    stopSelf();
                     stopForeground(true);
+                    stopSelf();
             }
         }
 
@@ -138,6 +148,27 @@ public class MusicService extends Service
         if (mediaPlayer != null) {
             mediaPlayer.start();
             mIsPlaying = true;
+
+            Song song = mSongs.get(currentSongPosition);
+            mRemoteViews.setImageViewResource(R.id.notif_play_btn,
+                    R.drawable.ic_round_pause_grey_24);
+            mRemoteViews.setTextViewText(R.id.notif_song_name_tv,
+                    song.getName());
+            mRemoteViews.setTextViewText(R.id.notif_song_artist_tv,
+                    song.getArtist());
+            NotificationTarget notificationTarget = new NotificationTarget(
+                    MusicService.this,
+                    R.id.notif_song_image,
+                    mRemoteViews,
+                    mNotification,
+                    NOTIFICATION_ID
+            );
+            Glide.with(MusicService.this).asBitmap().load(song.getPhotoPath()).
+                    circleCrop().into(notificationTarget);
+
+            mNotificationManager.notify(NOTIFICATION_ID, mNotification);
+
+            songAdapter.notifyDataSetChanged();
         }
     }
 
@@ -158,7 +189,7 @@ public class MusicService extends Service
 
         mediaPlayer.reset();
         try {
-            mediaPlayer.setDataSource(mSongs.get(currentSongPosition));
+            mediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
             mediaPlayer.prepareAsync();
         } catch (IOException e) {
             e.printStackTrace();
@@ -192,7 +223,7 @@ public class MusicService extends Service
 
     private void createNotification() {
         /**<-------Initializing notification------->**/
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         String channelID = null;
         CharSequence channelName = "MuSeek_Channel";
@@ -200,48 +231,48 @@ public class MusicService extends Service
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationChannel notificationChannel = new NotificationChannel(channelID, channelName,
                     NotificationManager.IMPORTANCE_HIGH);
-            //notificationChannel.enableLights(false);
-            //notificationChannel.enableVibration(false);
+            notificationChannel.enableLights(false);
+            notificationChannel.enableVibration(false);
 
-            notificationManager.createNotificationChannel(notificationChannel);
+            mNotificationManager.createNotificationChannel(notificationChannel);
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelID);
         builder.setSmallIcon(R.drawable.ic_round_music_note_grey_50).
                 setPriority(Notification.PRIORITY_MAX);
 
-        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
+        mRemoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
 
         Intent playIntent = new Intent(this, MusicService.class);
         playIntent.putExtra("action", "play");
         PendingIntent playPendingIntent = PendingIntent.getService(this,
                 0, playIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.notif_play_btn, playPendingIntent);
+        mRemoteViews.setOnClickPendingIntent(R.id.notif_play_btn, playPendingIntent);
 
         Intent previousIntent = new Intent(this, MusicService.class);
         previousIntent.putExtra("action", "previous");
         PendingIntent previousPendingIntent = PendingIntent.getService(this,
                 1, previousIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.notif_previous_btn, previousPendingIntent);
+        mRemoteViews.setOnClickPendingIntent(R.id.notif_previous_btn, previousPendingIntent);
 
         Intent nextIntent = new Intent(this, MusicService.class);
         nextIntent.putExtra("action", "next");
         PendingIntent nextPendingIntent = PendingIntent.getService(this,
                 2, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.notif_next_btn, nextPendingIntent);
+        mRemoteViews.setOnClickPendingIntent(R.id.notif_next_btn, nextPendingIntent);
 
         Intent closeIntent = new Intent(this, MusicService.class);
         closeIntent.putExtra("action", "close");
         PendingIntent closePendingIntent = PendingIntent.getService(this,
                 3, closeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.notif_close_btn, closePendingIntent);
+        mRemoteViews.setOnClickPendingIntent(R.id.notif_close_btn, closePendingIntent);
 
-        builder.setCustomContentView(remoteViews);
+        builder.setCustomBigContentView(mRemoteViews);
 
-        Notification notification = builder.build();
-        notification.flags |= Notification.FLAG_NO_CLEAR;
+        mNotification = builder.build();
+        mNotification.flags |= Notification.FLAG_NO_CLEAR;
 
-        startForeground(NOTIFICATION_ID, notification);
+        startForeground(NOTIFICATION_ID, mNotification);
     }
 
     public static int getCurrentSongPosition() {
@@ -264,8 +295,20 @@ public class MusicService extends Service
         this.mPlayBtn = playBtn;
     }
 
-    public void setNotifPlayBtn(ImageButton notifPlayBtn) {
-        this.mNotifPlayBtn = notifPlayBtn;
+    public List<Song> getSongList() {
+        return mSongs;
+    }
+
+    public void setSongList(List<Song> songList) {
+        this.mSongs = songList;
+    }
+
+    public SongAdapter getSongAdapter() {
+        return songAdapter;
+    }
+
+    public void setSongAdapter(SongAdapter songAdapter) {
+        this.songAdapter = songAdapter;
     }
 
     @Override
