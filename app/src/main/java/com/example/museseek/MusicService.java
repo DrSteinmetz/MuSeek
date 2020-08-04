@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
@@ -42,11 +43,13 @@ public class MusicService extends Service
     private boolean mIsInitialized = false;
     private boolean mIsPlaying = false;
 
-    private ImageButton mPlayBtn;
-    private SongAdapter songAdapter;
 
-    public MusicService() {
-    }
+    private ImageButton mainPlayBtn;
+    private ImageButton pagePlayBtn;
+    private ImageButton pageNextBtn;
+    private ImageButton pagePrevBtn;
+
+    private SongAdapter songAdapter;
 
     public class ServiceBinder extends Binder {
         MusicService getService() {
@@ -73,7 +76,7 @@ public class MusicService extends Service
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getStringExtra("action");
 
-        Log.d("Action:", action);
+        Log.d("Action", action);
 
         if (mediaPlayer != null) {
             switch (action) {
@@ -97,17 +100,27 @@ public class MusicService extends Service
                 case "play":
                     if (mediaPlayer.isPlaying()) {
                         if (pause()) {
-                            if (mPlayBtn != null) {
-                                mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                            /**<-------Performing UI changes------->**/
+                            if (mainPlayBtn != null) {
+                                mainPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
                             }
+                            if (pagePlayBtn != null) {
+                                pagePlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                            }
+                            /**<-------Performing notification changes------->**/
                             mRemoteViews.setImageViewResource(R.id.notif_play_btn,
                                     R.drawable.ic_round_play_arrow_grey_24);
                         }
                     } else {
                         if (play()) {
-                            if (mPlayBtn != null) {
-                                mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                            /**<-------Performing UI changes------->**/
+                            if (mainPlayBtn != null) {
+                                mainPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
                             }
+                            if (pagePlayBtn != null) {
+                                pagePlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                            }
+                            /**<-------Performing notification changes------->**/
                             mRemoteViews.setImageViewResource(R.id.notif_play_btn,
                                     R.drawable.ic_round_pause_grey_24);
                         }
@@ -150,6 +163,8 @@ public class MusicService extends Service
             mIsPlaying = true;
 
             Song song = mSongs.get(currentSongPosition);
+
+            /**<-------Performing notification changes------->**/
             mRemoteViews.setImageViewResource(R.id.notif_play_btn,
                     R.drawable.ic_round_pause_grey_24);
             mRemoteViews.setTextViewText(R.id.notif_song_name_tv,
@@ -168,6 +183,8 @@ public class MusicService extends Service
 
             mNotificationManager.notify(NOTIFICATION_ID, mNotification);
 
+
+            /**<-------Performing UI changes------->**/
             songAdapter.notifyDataSetChanged();
         }
     }
@@ -179,11 +196,19 @@ public class MusicService extends Service
             } else {
                 currentSongPosition = 0;
             }
+
+            if (pageNextBtn != null) {
+                pageNextBtn.performClick();
+            }
         } else {
             if (currentSongPosition <= 0) {
                 currentSongPosition = mSongs.size() - 1;
             } else {
                 currentSongPosition--;
+            }
+
+            if (pagePrevBtn != null) {
+                pagePrevBtn.performClick();
             }
         }
 
@@ -233,13 +258,14 @@ public class MusicService extends Service
                     NotificationManager.IMPORTANCE_HIGH);
             notificationChannel.enableLights(false);
             notificationChannel.enableVibration(false);
+            notificationChannel.setSound(null, null);
 
             mNotificationManager.createNotificationChannel(notificationChannel);
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelID);
-        builder.setSmallIcon(R.drawable.ic_round_music_note_grey_50).
-                setPriority(Notification.PRIORITY_MAX);
+        builder.setSmallIcon(R.drawable.ic_round_music_note_grey_50).setOnlyAlertOnce(true).
+                setPriority(Notification.PRIORITY_MAX).setContentTitle("MuSeek");
 
         mRemoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
 
@@ -291,8 +317,20 @@ public class MusicService extends Service
         return mIsPlaying;
     }
 
-    public void setPlayBtn(ImageButton playBtn) {
-        this.mPlayBtn = playBtn;
+    public void setMainPlayBtn(ImageButton mainPlayBtn) {
+        this.mainPlayBtn = mainPlayBtn;
+    }
+
+    public void setPagePlayBtn(ImageButton pagePlayBtn) {
+        this.pagePlayBtn = pagePlayBtn;
+    }
+
+    public void setPageNextBtn(ImageButton pageNextBtn) {
+        this.pageNextBtn = pageNextBtn;
+    }
+
+    public void setPagePrevBtn(ImageButton pagePrevBtn) {
+        this.pagePrevBtn = pagePrevBtn;
     }
 
     public List<Song> getSongList() {

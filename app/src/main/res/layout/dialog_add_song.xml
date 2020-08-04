@@ -53,6 +53,7 @@
             android:textSize="20sp"
             android:textColor="@color/colorPrimary"
             android:background="@drawable/view_selector"
+            android:textCursorDrawable="@color/colorPrimary"
             android:gravity="center"
             android:layout_centerHorizontal="true"
             android:maxLines="1"/>
@@ -83,6 +84,7 @@
             android:textSize="20sp"
             android:textColor="@color/colorPrimary"
             android:background="@drawable/view_selector"
+            android:textCursorDrawable="@color/colorPrimary"
             android:gravity="center"
             android:layout_centerHorizontal="true"
             android:maxLines="1"/>
@@ -113,6 +115,7 @@
             android:textSize="20sp"
             android:textColor="@color/colorPrimary"
             android:background="@drawable/view_selector"
+            android:textCursorDrawable="@color/colorPrimary"
             android:gravity="center"
             android:layout_centerHorizontal="true"
             android:maxLines="1"

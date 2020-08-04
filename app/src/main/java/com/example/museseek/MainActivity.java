@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         checkIfFirstUseOfApp();
 
 
-        /**<-------Initializing the RecyclerView------->**/
+        /**<-------Initializing control bar------->**/
         play_btn = findViewById(R.id.play_btn);
         next_btn = findViewById(R.id.next_btn);
         prev_btn = findViewById(R.id.previous_btn);
@@ -165,13 +165,18 @@ public class MainActivity extends AppCompatActivity {
                     MusicService.setCurrentSongPosition(position);
                     musicIntent.putExtra("action", "initial");
                     startService(musicIntent);
+                } else if (!mService.isInitialized()) {
+                    Intent musicIntent = new Intent(MainActivity.this, MusicService.class);
+                    initializeService();
+                    MusicService.setCurrentSongPosition(position);
+                    musicIntent.putExtra("action", "initial");
+                    startService(musicIntent);
                 }
 
                 Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
                 intent.putExtra("photo_path", mSongs.get(position).getPhotoPath());
                 intent.putExtra("name", mSongs.get(position).getName());
                 intent.putExtra("artist", mSongs.get(position).getArtist());
-                intent.putExtra("is_url", mSongs.get(position).isPhotoFromURL());
                 intent.putExtra("is_dark", mIsDarkMode);
                 startActivity(intent);
             }
@@ -224,19 +229,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = ((MusicService.ServiceBinder) service).getService();
-            Log.d("onServiceConnected", "Service Created");
 
             /**<-------Setting the play/pause button according to the Music service------->**/
             if (mService != null) {
                 if (mService.isPlaying()) {
-                    Log.d("onResume", "Playing");
                     play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
                 } else {
                     play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
-                    Log.d("onResume", "NOT Playing");
                 }
             } else {
-                Log.d("onResume", "Service is null");
                 play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
             }
         }
@@ -252,7 +253,6 @@ public class MainActivity extends AppCompatActivity {
         if (!mIsBound) {
             bindService(new Intent(this, MusicService.class), serviceConnection, Context.BIND_AUTO_CREATE);
             mIsBound = true;
-            Log.d("doBindService", "Bound");
         }
     }
 
@@ -260,7 +260,6 @@ public class MainActivity extends AppCompatActivity {
         if (mIsBound) {
             unbindService(serviceConnection);
             mIsBound = false;
-            Log.d("doUnbindService", "Unbound");
         }
     }
 
@@ -312,9 +311,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        Log.d("onActivityResult", "RESULT_OK = -1, resultCode = " + resultCode);
+        //Result canceled every time taking a pic with the camera...
+        Log.d("onActivityResult", "CAMERA_REQUEST = 1, requestCode = " + requestCode);
         if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
             mSelectedImage = Uri.parse(mFile.getAbsolutePath());
-            Log.d("onActivityResult", "CAMERA_REQUEST");
+            Log.d("onActivityResult", "CAMERA_REQUEST\n" + mSelectedImage.toString());
         } else if (requestCode == GALLERY_REQUEST && resultCode == RESULT_OK) {
             mSelectedImage = data.getData();
             Log.d("onActivityResult", "GALLERY_REQUEST");
@@ -372,7 +374,7 @@ public class MainActivity extends AppCompatActivity {
     private void initializeService() {
         /**<-------Passing on an instance of the play button so the
          *           service will be able to change the button too------->**/
-        mService.setPlayBtn(play_btn);
+        mService.setMainPlayBtn(play_btn);
         /**<-------Initializing song list------->**/
         mService.setSongList(mSongs);
         /**<-------Passing on an instance of the song adapter so the
@@ -502,6 +504,7 @@ public class MainActivity extends AppCompatActivity {
                 String songURL = url_et.getText().toString();
                 String photoUri = mSelectedImage != null ? mSelectedImage.toString() : "";
 
+                /**<-------Checking if the user entered all the details------->*/
                 if (songName.trim().length() < 1 || songArtist.trim().length() < 1
                         || songURL.trim().length() < 1) {
                     Toast.makeText(MainActivity.this, "You must enter name, artist, and URL!", Toast.LENGTH_SHORT).show();

@@ -1,13 +1,10 @@
 package com.example.museseek;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,7 +18,10 @@ import java.util.List;
 
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder> {
     private List<Song> songs;
+
     private Context context;
+
+    private boolean firstRun = true;
 
     public SongAdapter(List<Song> songs, Context context) {
         this.songs = songs;
@@ -43,7 +43,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         ImageView photoIv;
         TextView nameTv;
         TextView artistTv;
-        CardView layout;
+        CardView cardLayout;
 
         public SongViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -51,7 +51,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             photoIv = itemView.findViewById(R.id.photo_iv);
             nameTv = itemView.findViewById(R.id.name_tv);
             artistTv = itemView.findViewById(R.id.artist_tv);
-            layout = itemView.findViewById(R.id.card_layout);
+            cardLayout = itemView.findViewById(R.id.card_layout);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -103,11 +103,13 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         holder.artistTv.setText(song.getArtist());
 
 
-        if (position == MusicService.getCurrentSongPosition()) {
-            holder.layout.setBackgroundColor(context.getResources().getColor(R.color.colorPurple2, null));
+        if (position == MusicService.getCurrentSongPosition() && !firstRun) {
+            holder.cardLayout.setCardBackgroundColor(context.getResources().getColor(R.color.colorPurple2, null));
         } else {
-            holder.layout.setBackgroundColor(context.getResources().getColor(R.color.colorTransparent, null));
+            holder.cardLayout.setCardBackgroundColor(context.getResources().getColor(R.color.colorPrimary, null));
         }
+
+        firstRun = false;
     }
 
     @Override

@@ -15,15 +15,15 @@
         android:id="@+id/details_text_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_above="@id/control_bar"
         android:padding="15dp"
-        android:layout_alignParentBottom="true"
         android:gravity="center">
 
         <TextView
             android:id="@+id/details_name_tv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=""
+            android:text="Song Name"
             android:textSize="30sp"
             android:textColor="@color/colorPrimary"
             android:textStyle="bold"
@@ -35,12 +35,53 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/details_name_tv"
-            android:text=""
+            android:text="Artist"
             android:textSize="25sp"
             android:textColor="@color/colorPrimary"
             android:textAllCaps="false"
             android:alpha="0.8"
             android:gravity="center"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/control_bar"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/colorPrimary">
+
+        <ImageButton
+            android:id="@+id/previous_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_toStartOf="@id/play_btn"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/ic_round_fast_forward_white_100"
+            android:background="@color/colorTransparent"
+            android:scaleType="fitXY"
+            android:rotation="180"/>
+
+        <ImageButton
+            android:id="@+id/play_btn"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_centerInParent="true"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/ic_round_pause_white_100"
+            android:background="@color/colorTransparent"
+            android:scaleType="fitXY"/>
+
+        <ImageButton
+            android:id="@+id/next_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_toEndOf="@id/play_btn"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_round_fast_forward_white_100"
+            android:background="@color/colorTransparent"
+            android:scaleType="fitXY"/>
 
     </RelativeLayout>
 
