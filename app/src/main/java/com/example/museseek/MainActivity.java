@@ -177,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("photo_path", mSongs.get(position).getPhotoPath());
                 intent.putExtra("name", mSongs.get(position).getName());
                 intent.putExtra("artist", mSongs.get(position).getArtist());
+                intent.putExtra("duration", mService.getSongDuration());
                 intent.putExtra("is_dark", mIsDarkMode);
                 startActivity(intent);
             }
@@ -196,10 +197,14 @@ public class MainActivity extends AppCompatActivity {
                 final int from = viewHolder.getAdapterPosition();
                 final int to = target.getAdapterPosition();
 
+                if (viewHolder.getAdapterPosition() == MusicService.getCurrentSongPosition()) {
+                    MusicService.setCurrentSongPosition(to);
+                }
+
+                mSongAdapter.notifyItemMoved(from, to);
                 Song song = mSongs.remove(from);
                 mSongs.add(to, song);
 
-                mSongAdapter.notifyItemMoved(from, to);
                 if (mService != null) {
                     mService.setSongList(mSongs);
                 }
@@ -240,6 +245,8 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
             }
+
+            initializeService();
         }
 
         @Override

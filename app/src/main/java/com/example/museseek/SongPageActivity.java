@@ -5,11 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -27,13 +29,19 @@ public class SongPageActivity extends AppCompatActivity {
 
     private List<Song> mSongs = new ArrayList<>();
 
-    ImageView photoIv;
-    TextView nameTv;
-    TextView artistTv;
+    private ImageView photoIv;
+    private TextView nameTv;
+    private TextView artistTv;
 
-    private ImageButton play_btn;
-    private ImageButton next_btn;
-    private ImageButton prev_btn;
+    private String photoPath;
+    private String name;
+    private String artist;
+    private int duration;
+
+    private ImageButton playBtn;
+    private ImageButton nextBtn;
+    private ImageButton prevBtn;
+    private SeekBar songSeekBar;
 
     private boolean mIsDarkMode;
 
@@ -46,9 +54,10 @@ public class SongPageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song_page);
 
-        String photoPath = getIntent().getStringExtra("photo_path");
-        String name = getIntent().getStringExtra("name");
-        String artist = getIntent().getStringExtra("artist");
+        photoPath = getIntent().getStringExtra("photo_path");
+        name = getIntent().getStringExtra("name");
+        artist = getIntent().getStringExtra("artist");
+        duration = getIntent().getIntExtra("duration", 0);
         mIsDarkMode = getIntent().getBooleanExtra("is_dark", false);
 
         if (mIsDarkMode) {
@@ -57,28 +66,28 @@ public class SongPageActivity extends AppCompatActivity {
             findViewById(R.id.song_page_layout).setBackgroundColor(getColor(R.color.colorAccent));
         }
 
+        songSeekBar = findViewById(R.id.details_duration_sb);
+
         photoIv = findViewById(R.id.details_iv);
         nameTv = findViewById(R.id.details_name_tv);
         artistTv = findViewById(R.id.details_artist_tv);
 
-        initializeSongPage(name, artist, photoPath);
-
         /**<-------Initializing control bar------->**/
-        play_btn = findViewById(R.id.play_btn);
-        next_btn = findViewById(R.id.next_btn);
-        prev_btn = findViewById(R.id.previous_btn);
+        playBtn = findViewById(R.id.play_btn);
+        nextBtn = findViewById(R.id.next_btn);
+        prevBtn = findViewById(R.id.previous_btn);
 
-        play_btn.setOnClickListener(new View.OnClickListener() {
+        playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mService.isPlaying()) {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
 
                     Intent intent = new Intent(SongPageActivity.this, MusicService.class);
                     intent.putExtra("action", "play");
                     startService(intent);
                 } else {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
 
                     Intent intent = new Intent(SongPageActivity.this, MusicService.class);
                     if (!mService.isInitialized()) {
@@ -93,11 +102,11 @@ public class SongPageActivity extends AppCompatActivity {
             }
         });
 
-        next_btn.setOnClickListener(new View.OnClickListener() {
+        nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
 
                     int position = MusicService.getCurrentSongPosition() >= mSongs.size() - 1 ?
                             0 : MusicService.getCurrentSongPosition() + 1;
@@ -105,7 +114,8 @@ public class SongPageActivity extends AppCompatActivity {
                     String photoPath = mSongs.get(position).getPhotoPath();
                     String name = mSongs.get(position).getName();
                     String artist = mSongs.get(position).getArtist();
-                    initializeSongPage(name, artist, photoPath);
+                    int duration = mService.getSongDuration();
+                    initializeSongPage(name, artist, photoPath, duration);
 
                     if (mHasFocus) {
                         Intent intent = new Intent(SongPageActivity.this, MusicService.class);
@@ -116,11 +126,11 @@ public class SongPageActivity extends AppCompatActivity {
             }
         });
 
-        prev_btn.setOnClickListener(new View.OnClickListener() {
+        prevBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
 
                     int position = MusicService.getCurrentSongPosition() <= 0 ?
                             mSongs.size() - 1 : MusicService.getCurrentSongPosition() - 1;
@@ -128,7 +138,8 @@ public class SongPageActivity extends AppCompatActivity {
                     String photoPath = mSongs.get(position).getPhotoPath();
                     String name = mSongs.get(position).getName();
                     String artist = mSongs.get(position).getArtist();
-                    initializeSongPage(name, artist, photoPath);
+                    int duration = mService.getSongDuration();
+                    initializeSongPage(name, artist, photoPath, duration);
 
                     if (mHasFocus) {
                         Intent intent = new Intent(SongPageActivity.this, MusicService.class);
@@ -143,25 +154,27 @@ public class SongPageActivity extends AppCompatActivity {
     /**<-------Initializing MusicService connection methods------->**/
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
             mService = ((MusicService.ServiceBinder) service).getService();
 
             /**<-------Setting the play/pause button according to the Music service------->**/
             if (mService != null) {
                 Log.d(TAG, "onServiceConnected: Service activated");
                 mSongs = mService.getSongList();
-                mService.setPagePlayBtn(play_btn);
-                mService.setPageNextBtn(next_btn);
-                mService.setPagePrevBtn(prev_btn);
+                mService.setPagePlayBtn(playBtn);
+                mService.setPageNextBtn(nextBtn);
+                mService.setPagePrevBtn(prevBtn);
                 if (mService.isPlaying()) {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
                 } else {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
                 }
             } else {
-                play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
                 Log.d(TAG, "onServiceConnected: Service is NULL");
             }
+
+            initializeSongPage(name, artist, photoPath, duration);
         }
 
         @Override
@@ -187,7 +200,7 @@ public class SongPageActivity extends AppCompatActivity {
         }
     }
 
-    private void initializeSongPage(String name, String artist, String photoPath) {
+    private void initializeSongPage(String name, String artist, String photoPath, int duration) {
         RequestOptions options = new RequestOptions().
                 placeholder(R.mipmap.ic_launcher_round).
                 error(R.mipmap.ic_launcher_round);
@@ -199,12 +212,23 @@ public class SongPageActivity extends AppCompatActivity {
 
         nameTv.setText(name);
         artistTv.setText(artist);
+
+        Log.d(TAG, "initializeSongPage: " + duration);
+
+        songSeekBar.setMax(duration);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                songSeekBar.setProgress(songSeekBar.getProgress() + 1000);
+            }
+        }, 1000);
     }
 
     private void initializeService() {
         /**<-------Passing on an instance of the play button so the
          *           service will be able to change the button too------->**/
-        mService.setPagePlayBtn(play_btn);
+        mService.setPagePlayBtn(playBtn);
         /**<-------Initializing song list------->**/
         mService.setSongList(mSongs);
     }
@@ -227,8 +251,8 @@ public class SongPageActivity extends AppCompatActivity {
                 mService.setPageNextBtn(null);
                 mService.setPagePrevBtn(null);
             } else {
-                mService.setPageNextBtn(next_btn);
-                mService.setPagePrevBtn(prev_btn);
+                mService.setPageNextBtn(nextBtn);
+                mService.setPagePrevBtn(prevBtn);
             }
         }
         Log.d(TAG, "onWindowFocusChanged: " + hasFocus);

@@ -42,6 +42,12 @@
             android:alpha="0.8"
             android:gravity="center"/>
 
+        <SeekBar
+            android:id="@+id/details_duration_sb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/details_artist_tv"/>
+
     </RelativeLayout>
 
     <RelativeLayout

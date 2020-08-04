@@ -104,11 +104,14 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
 
         if (position == MusicService.getCurrentSongPosition() && !firstRun) {
-            holder.cardLayout.setCardBackgroundColor(context.getResources().getColor(R.color.colorPurple2, null));
+            holder.cardLayout.setCardBackgroundColor(context.getResources().getColor(R.color.colorPurple1, null));
+            holder.nameTv.setTextColor(context.getResources().getColor(R.color.colorPrimaryDark, null));
+            holder.artistTv.setTextColor(context.getResources().getColor(R.color.colorPrimaryDark, null));
         } else {
             holder.cardLayout.setCardBackgroundColor(context.getResources().getColor(R.color.colorPrimary, null));
+            holder.nameTv.setTextColor(context.getResources().getColor(R.color.colorAccent, null));
+            holder.artistTv.setTextColor(context.getResources().getColor(R.color.colorAccent, null));
         }
-
         firstRun = false;
     }
 

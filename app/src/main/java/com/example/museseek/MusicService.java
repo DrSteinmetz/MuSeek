@@ -5,7 +5,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
@@ -293,6 +292,11 @@ public class MusicService extends Service
                 3, closeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         mRemoteViews.setOnClickPendingIntent(R.id.notif_close_btn, closePendingIntent);
 
+        Intent activityIntent = new Intent(this, MainActivity.class);
+        PendingIntent activityPendingIntent = PendingIntent.getActivity(this,
+                4, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(activityPendingIntent);
+
         builder.setCustomBigContentView(mRemoteViews);
 
         mNotification = builder.build();
@@ -347,6 +351,10 @@ public class MusicService extends Service
 
     public void setSongAdapter(SongAdapter songAdapter) {
         this.songAdapter = songAdapter;
+    }
+
+    public int getSongDuration() {
+        return this.mediaPlayer.getDuration();
     }
 
     @Override
