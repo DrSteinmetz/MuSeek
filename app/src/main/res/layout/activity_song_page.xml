@@ -4,12 +4,13 @@
     android:layout_height="match_parent"
     android:id="@+id/song_page_layout">
 
-    <ImageView
-        android:id="@+id/details_iv"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="15dp"
-        android:layout_above="@id/details_text_layout"/>
+        <ImageView
+            android:id="@+id/details_iv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/details_text_layout"
+            android:layout_margin="15dp"/>
+
 
     <RelativeLayout
         android:id="@+id/details_text_layout"
@@ -25,7 +26,7 @@
             android:layout_height="wrap_content"
             android:text="Song Name"
             android:textSize="30sp"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/colorPurple2"
             android:textStyle="bold"
             android:textAllCaps="false"
             android:gravity="center"/>
@@ -37,7 +38,7 @@
             android:layout_below="@+id/details_name_tv"
             android:text="Artist"
             android:textSize="25sp"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/colorPurple2"
             android:textAllCaps="false"
             android:alpha="0.8"
             android:gravity="center"/>
@@ -46,7 +47,30 @@
             android:id="@+id/details_duration_sb"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/details_artist_tv"/>
+            android:layout_below="@id/details_artist_tv"
+            android:theme="@style/SeekBarTheme"/>
+
+        <TextView
+            android:id="@+id/details_start_duration_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/details_duration_sb"
+            android:layout_alignStart="@id/details_duration_sb"
+            android:layout_margin="10dp"
+            android:textSize="15sp"
+            android:textColor="@color/colorPurple2"
+            android:textAllCaps="false"/>
+
+        <TextView
+            android:id="@+id/details_end_duration_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/details_duration_sb"
+            android:layout_alignEnd="@id/details_duration_sb"
+            android:layout_margin="10dp"
+            android:textSize="15sp"
+            android:textColor="@color/colorNotificationGrey"
+            android:textAllCaps="false"/>
 
     </RelativeLayout>
 
@@ -88,6 +112,17 @@
             android:src="@drawable/ic_round_fast_forward_white_100"
             android:background="@color/colorTransparent"
             android:scaleType="fitXY"/>
+
+        <Button
+            android:id="@+id/service_previous_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
+        <Button
+            android:id="@+id/service_next_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
 
     </RelativeLayout>
 

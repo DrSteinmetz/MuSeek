@@ -32,7 +32,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     interface SongListener {
         void onSongClicked(int position, View view);
-        void onSongLongClicked(int position, View view);
     }
 
     public void setListener(SongListener listener) {
@@ -59,16 +58,6 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                     if (listener != null) {
                         listener.onSongClicked(getAdapterPosition(), v);
                     }
-                }
-            });
-
-            itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    if (listener != null) {
-                        listener.onSongLongClicked(getAdapterPosition(), v);
-                    }
-                    return false;
                 }
             });
         }

@@ -37,7 +37,7 @@
         android:layout_height="50dp"
         android:layout_alignBottom="@id/btn_dummy"
         android:layout_toStartOf="@id/btn_dummy"
-        android:src="@drawable/ic_round_pause_white_100"
+        android:src="@drawable/ic_cancel_btn"
         android:background="@color/colorTransparent"
         android:scaleType="fitCenter"/>
 
@@ -56,7 +56,7 @@
         android:layout_height="50dp"
         android:layout_alignBottom="@id/btn_dummy"
         android:layout_toEndOf="@id/btn_dummy"
-        android:src="@drawable/ic_round_play_arrow_white_100"
+        android:src="@drawable/ic_confirm_btn"
         android:background="@color/colorTransparent"
         android:scaleType="fitCenter"/>
 

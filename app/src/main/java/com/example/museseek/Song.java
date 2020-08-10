@@ -57,4 +57,11 @@ public class Song implements Serializable {
     public void setIsPhotoFromURL(boolean photoFromURL) {
         mIsPhotoFromURL = photoFromURL;
     }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "Name: " + mName +
+                "\nArtist: " + mArtist;
+    }
 }

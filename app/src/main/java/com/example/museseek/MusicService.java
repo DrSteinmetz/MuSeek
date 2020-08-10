@@ -9,10 +9,14 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RemoteViews;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -27,7 +31,7 @@ import java.util.List;
 public class MusicService extends Service
         implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener {
 
-    private MediaPlayer mediaPlayer = new MediaPlayer();
+    private MediaPlayer mMediaPlayer = new MediaPlayer();
 
     private final IBinder mBinder = new ServiceBinder();
 
@@ -44,11 +48,19 @@ public class MusicService extends Service
 
 
     private ImageButton mainPlayBtn;
-    private ImageButton pagePlayBtn;
-    private ImageButton pageNextBtn;
-    private ImageButton pagePrevBtn;
-
     private SongAdapter songAdapter;
+
+    private ImageButton pagePlayBtn;
+    private Button pageNextBtn;
+    private Button pagePrevBtn;
+    private SeekBar pageSeekBar;
+    private TextView pageTimerStartTv;
+    private TextView pageTimerEndTv;
+    private Handler mHandler = new Handler();
+    private Runnable mRunnable;
+
+
+    private final String TAG = "MusicService";
 
     public class ServiceBinder extends Binder {
         MusicService getService() {
@@ -66,30 +78,47 @@ public class MusicService extends Service
     public void onCreate() {
         super.onCreate();
 
-        mediaPlayer.setOnPreparedListener(this);
-        mediaPlayer.setOnCompletionListener(this);
-        mediaPlayer.reset();
+        mRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (pageSeekBar != null && mMediaPlayer.getDuration() > 0) {
+                    pageSeekBar.setProgress(mMediaPlayer.getCurrentPosition(), true);
+                }
+                mHandler.postDelayed(mRunnable, 1000);
+            }
+        };
+
+        mMediaPlayer.setOnPreparedListener(this);
+        mMediaPlayer.setOnCompletionListener(this);
+        mMediaPlayer.reset();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getStringExtra("action");
 
-        Log.d("Action", action);
+        Log.d(TAG, "onStartCommand - Action: " + action);
+        Log.d(TAG, "onStartCommand - currentSong: " + mSongs.get(currentSongPosition));
 
-        if (mediaPlayer != null) {
+        if (mMediaPlayer != null) {
             switch (action) {
                 case "initial":
                     try {
                         if (!mIsInitialized) {
-                            mediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
-                            mediaPlayer.prepareAsync();
+                            Log.d(TAG, "onStartCommand: mSongs.size(): " + mSongs.size());
+                            mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
+                            mMediaPlayer.prepareAsync();
+//                            mMediaPlayer.prepare();
                             createNotification();
                             mIsInitialized = true;
                         } else {
-                            mediaPlayer.reset();
-                            mediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
-                            mediaPlayer.prepareAsync();
+                            if (mMediaPlayer.isPlaying()) {
+                                mMediaPlayer.stop();
+                            }
+                            mMediaPlayer.reset();
+
+                            mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
+                            mMediaPlayer.prepareAsync();
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -97,14 +126,16 @@ public class MusicService extends Service
                     break;
 
                 case "play":
-                    if (mediaPlayer.isPlaying()) {
+                    if (mMediaPlayer.isPlaying()) {
                         if (pause()) {
                             /**<-------Performing UI changes------->**/
                             if (mainPlayBtn != null) {
-                                mainPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                                mainPlayBtn.setImageDrawable(getDrawable(
+                                        R.drawable.ic_round_play_arrow_white_100));
                             }
                             if (pagePlayBtn != null) {
-                                pagePlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                                pagePlayBtn.setImageDrawable(getDrawable(
+                                        R.drawable.ic_round_play_arrow_white_100));
                             }
                             /**<-------Performing notification changes------->**/
                             mRemoteViews.setImageViewResource(R.id.notif_play_btn,
@@ -114,10 +145,12 @@ public class MusicService extends Service
                         if (play()) {
                             /**<-------Performing UI changes------->**/
                             if (mainPlayBtn != null) {
-                                mainPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                                mainPlayBtn.setImageDrawable(getDrawable(
+                                        R.drawable.ic_round_pause_white_100));
                             }
                             if (pagePlayBtn != null) {
-                                pagePlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                                pagePlayBtn.setImageDrawable(getDrawable(
+                                        R.drawable.ic_round_pause_white_100));
                             }
                             /**<-------Performing notification changes------->**/
                             mRemoteViews.setImageViewResource(R.id.notif_play_btn,
@@ -128,22 +161,17 @@ public class MusicService extends Service
                     break;
 
                 case "next":
-                    if (mediaPlayer.isPlaying()) {
-                        mediaPlayer.stop();
-                    }
                     moveSong(true);
                     break;
 
                 case "previous":
-                    if (mediaPlayer.isPlaying()) {
-                        mediaPlayer.stop();
-                    }
                     moveSong(false);
                     break;
 
                 case "close":
                     stopForeground(true);
                     stopSelf();
+                    mNotificationManager.cancel(NOTIFICATION_ID);
             }
         }
 
@@ -153,12 +181,19 @@ public class MusicService extends Service
     @Override
     public void onCompletion(MediaPlayer mp) {
         moveSong(true);
+        Log.d(TAG, "onCompletion");
     }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        if (mediaPlayer != null) {
-            mediaPlayer.start();
+        Log.d(TAG, "onPrepared");
+        if (mRunnable != null) {
+            mHandler.removeCallbacks(mRunnable);
+        }
+
+        if (mMediaPlayer != null) {
+            Log.d(TAG, "onPrepared: Duration: " + mMediaPlayer.getDuration());
+            mMediaPlayer.start();
             mIsPlaying = true;
 
             Song song = mSongs.get(currentSongPosition);
@@ -185,6 +220,39 @@ public class MusicService extends Service
 
             /**<-------Performing UI changes------->**/
             songAdapter.notifyDataSetChanged();
+
+            if (pageSeekBar != null) {
+                pageSeekBar.setMax(mMediaPlayer.getDuration());
+                pageSeekBar.setProgress(0);
+                mRunnable.run();
+
+                pageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (mMediaPlayer != null && !fromUser) {
+                            pageTimerStartTv.setText(milliSecondsToTimer(mMediaPlayer.getCurrentPosition()));
+                            pageTimerEndTv.setText(milliSecondsToTimer(
+                                    mMediaPlayer.getDuration() - mMediaPlayer.getCurrentPosition()));
+                        }
+
+                        if (fromUser) {
+                            pageTimerStartTv.setText(milliSecondsToTimer(progress));
+                            pageTimerEndTv.setText(milliSecondsToTimer(mMediaPlayer.getDuration() - progress));
+                        }
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        if (mMediaPlayer != null) {
+                            mMediaPlayer.seekTo(seekBar.getProgress());
+                        }
+                    }
+                });
+            }
         }
     }
 
@@ -211,10 +279,14 @@ public class MusicService extends Service
             }
         }
 
-        mediaPlayer.reset();
+        if (mMediaPlayer.isPlaying()) {
+            mMediaPlayer.stop();
+        }
+        mMediaPlayer.reset();
         try {
-            mediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
-            mediaPlayer.prepareAsync();
+            mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
+            mMediaPlayer.prepareAsync();
+//            mMediaPlayer.prepare();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -224,11 +296,11 @@ public class MusicService extends Service
 
     private boolean play() {
         mIsPlaying = false;
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
+        if (mMediaPlayer != null) {
+            if (mMediaPlayer.isPlaying()) {
                 mIsPlaying = true;
             }
-            mediaPlayer.start();
+            mMediaPlayer.start();
             mIsPlaying = true;
         }
         return mIsPlaying;
@@ -236,9 +308,9 @@ public class MusicService extends Service
 
     private boolean pause() {
         mIsPlaying = true;
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.pause();
+        if (mMediaPlayer != null) {
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.pause();
                 mIsPlaying = false;
             }
         }
@@ -305,12 +377,39 @@ public class MusicService extends Service
         startForeground(NOTIFICATION_ID, mNotification);
     }
 
+    private String milliSecondsToTimer(long milliseconds){
+        String finalTimerString = "";
+        String secondsString = "";
+        String minutesString = "";
+
+        /**<-------Convert total duration into time------->**/
+        int hours = (int) (milliseconds / (1000 * 60 * 60));
+        int minutes = (int) (milliseconds % (1000 * 60 * 60)) / (1000 * 60);
+        int seconds = (int) ((milliseconds % (1000 * 60 * 60)) % (1000 * 60) / 1000);
+        /**<-------Add hours if there------->**/
+        if (hours > 0) {
+            finalTimerString = hours + ":";
+        }
+
+        /**<-------Prepending 0 to seconds if it is one digit------->**/
+        secondsString = (seconds < 10 ? "0" + seconds : "" + seconds);
+        /**<-------Prepending 0 to minutes if it is one digit------->**/
+        minutesString = (minutes < 10 ? "0" + minutes : "" + minutes);
+
+        finalTimerString = finalTimerString + minutesString + ":" + secondsString;
+
+        /**<-------Return timer string------->**/
+        return finalTimerString;
+    }
+
     public static int getCurrentSongPosition() {
         return currentSongPosition;
     }
 
     public static void setCurrentSongPosition(int currentSongPosition) {
-        MusicService.currentSongPosition = currentSongPosition;
+        if (currentSongPosition >= 0) {
+            MusicService.currentSongPosition = currentSongPosition;
+        }
     }
 
     public boolean isInitialized() {
@@ -321,6 +420,10 @@ public class MusicService extends Service
         return mIsPlaying;
     }
 
+    public MediaPlayer getMediaPlayer() {
+        return mMediaPlayer;
+    }
+
     public void setMainPlayBtn(ImageButton mainPlayBtn) {
         this.mainPlayBtn = mainPlayBtn;
     }
@@ -329,11 +432,11 @@ public class MusicService extends Service
         this.pagePlayBtn = pagePlayBtn;
     }
 
-    public void setPageNextBtn(ImageButton pageNextBtn) {
+    public void setPageNextBtn(Button pageNextBtn) {
         this.pageNextBtn = pageNextBtn;
     }
 
-    public void setPagePrevBtn(ImageButton pagePrevBtn) {
+    public void setPagePrevBtn(Button pagePrevBtn) {
         this.pagePrevBtn = pagePrevBtn;
     }
 
@@ -353,21 +456,35 @@ public class MusicService extends Service
         this.songAdapter = songAdapter;
     }
 
-    public int getSongDuration() {
-        return this.mediaPlayer.getDuration();
+    public void setPageSeekBar(SeekBar pageSeekBar) {
+        this.pageSeekBar = pageSeekBar;
+    }
+
+    public void setPageTimerStartTv(TextView pageTimerStartTv) {
+        this.pageTimerStartTv = pageTimerStartTv;
+    }
+
+    public void setPageTimerEndTv(TextView pageTimerEndTv) {
+        this.pageTimerEndTv = pageTimerEndTv;
+    }
+
+    public Runnable getRunnable() {
+        return mRunnable;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
+        if (mMediaPlayer != null) {
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.stop();
             }
-            mediaPlayer.release();
+            mMediaPlayer.release();
         }
 
         mIsPlaying = mIsInitialized = false;
+
+        Log.d(TAG, "onDestroy");
     }
 }

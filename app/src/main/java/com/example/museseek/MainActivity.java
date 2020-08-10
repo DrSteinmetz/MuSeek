@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -55,9 +56,9 @@ public class MainActivity extends AppCompatActivity {
     private SongAdapter mSongAdapter;
     private List<Song> mSongs = new ArrayList<>();
 
-    private ImageButton play_btn;
-    private ImageButton next_btn;
-    private ImageButton prev_btn;
+    private ImageButton playBtn;
+    private ImageButton nextBtn;
+    private ImageButton prevBtn;
 
     private final String SONG_PATH = "songs";
 
@@ -66,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
     private final int CAMERA_REQUEST = 1;
     private final int GALLERY_REQUEST = 2;
     private final int WRITE_PERMISSION_REQUEST = 7;
+
+    private final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,40 +91,37 @@ public class MainActivity extends AppCompatActivity {
 
 
         /**<-------Initializing control bar------->**/
-        play_btn = findViewById(R.id.play_btn);
-        next_btn = findViewById(R.id.next_btn);
-        prev_btn = findViewById(R.id.previous_btn);
+        playBtn = findViewById(R.id.play_btn);
+        nextBtn = findViewById(R.id.next_btn);
+        prevBtn = findViewById(R.id.previous_btn);
 
-        play_btn.setOnClickListener(new View.OnClickListener() {
+        playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /**<-------Changing Play/Pause button------->**/
                 if (mService.isPlaying()) {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
-
-                    Intent intent = new Intent(MainActivity.this, MusicService.class);
-                    intent.putExtra("action", "play");
-                    startService(intent);
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
                 } else {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-
-                    Intent intent = new Intent(MainActivity.this, MusicService.class);
-                    if (!mService.isInitialized()) {
-                        initializeService();
-                        /**<-------Initializing Music Service------->**/
-                        intent.putExtra("action", "initial");
-                    } else {
-                        intent.putExtra("action", "play");
-                    }
-                    startService(intent);
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
                 }
+
+                /**<-------Start the music------->**/
+                Intent intent = new Intent(MainActivity.this, MusicService.class);
+                if (!mService.isInitialized()) {
+                    initializeService();
+                    intent.putExtra("action", "initial");
+                } else {
+                    intent.putExtra("action", "play");
+                }
+                startService(intent);
             }
         });
 
-        next_btn.setOnClickListener(new View.OnClickListener() {
+        nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
 
                     Intent intent = new Intent(MainActivity.this, MusicService.class);
                     intent.putExtra("action", "next");
@@ -130,11 +130,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        prev_btn.setOnClickListener(new View.OnClickListener() {
+        prevBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
 
                     Intent intent = new Intent(MainActivity.this, MusicService.class);
                     intent.putExtra("action", "previous");
@@ -155,37 +155,43 @@ public class MainActivity extends AppCompatActivity {
         mSongAdapter.setListener(new SongAdapter.SongListener() {
             @Override
             public void onSongClicked(int position, View view) {
-                play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                if (mService.isPlaying()) {
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                }
 
                 if (MusicService.getCurrentSongPosition() != position) {
+                    MusicService.setCurrentSongPosition(position);
+
+                    Log.d("onSongClicked(init)", "position: " + position);
+                    Log.d("onSongClicked(init)", "mSongs.size(): " + mSongs.size());
                     Intent musicIntent = new Intent(MainActivity.this, MusicService.class);
                     if (!mService.isInitialized()) {
                         initializeService();
                     }
-                    MusicService.setCurrentSongPosition(position);
                     musicIntent.putExtra("action", "initial");
                     startService(musicIntent);
                 } else if (!mService.isInitialized()) {
+                    MusicService.setCurrentSongPosition(position);
+
+                    Log.d("onSongClicked(notInit)", "position: " + position);
+                    Log.d("onSongClicked(notInit)", "mSongs.size(): " + mSongs.size());
                     Intent musicIntent = new Intent(MainActivity.this, MusicService.class);
                     initializeService();
-                    MusicService.setCurrentSongPosition(position);
                     musicIntent.putExtra("action", "initial");
                     startService(musicIntent);
                 }
+                Log.d("onSongClicked", "position: " + position);
+                Log.d("onSongClicked", "mSongs.size(): " + mSongs.size());
 
                 Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
                 intent.putExtra("photo_path", mSongs.get(position).getPhotoPath());
                 intent.putExtra("name", mSongs.get(position).getName());
                 intent.putExtra("artist", mSongs.get(position).getArtist());
-                intent.putExtra("duration", mService.getSongDuration());
                 intent.putExtra("is_dark", mIsDarkMode);
                 startActivity(intent);
             }
-
-            @Override
-            public void onSongLongClicked(int position, View view) {
-            }
         });
+
 
         ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP | ItemTouchHelper.DOWN,
@@ -197,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
                 final int from = viewHolder.getAdapterPosition();
                 final int to = target.getAdapterPosition();
 
-                if (viewHolder.getAdapterPosition() == MusicService.getCurrentSongPosition()) {
+                if (from == MusicService.getCurrentSongPosition()) {
                     MusicService.setCurrentSongPosition(to);
                 }
 
@@ -215,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSwiped(@NonNull final RecyclerView.ViewHolder viewHolder, int direction) {
                 if (direction == ItemTouchHelper.RIGHT) {
-                    //TODO: Action on right swipe
+                    //TODO: Action on right swipe OR delete of there's no action
                     mSongAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
                 } else if (direction == ItemTouchHelper.LEFT) {
                     showSongDeletionDialog(viewHolder.getAdapterPosition());
@@ -238,12 +244,12 @@ public class MainActivity extends AppCompatActivity {
             /**<-------Setting the play/pause button according to the Music service------->**/
             if (mService != null) {
                 if (mService.isPlaying()) {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
                 } else {
-                    play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
                 }
             } else {
-                play_btn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
             }
 
             initializeService();
@@ -258,7 +264,8 @@ public class MainActivity extends AppCompatActivity {
     /**<-------Sets the MusicService Binding methods------->**/
     private void doBindService() {
         if (!mIsBound) {
-            bindService(new Intent(this, MusicService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+            bindService(new Intent(this, MusicService.class), serviceConnection,
+                    Context.BIND_AUTO_CREATE);
             mIsBound = true;
         }
     }
@@ -294,7 +301,8 @@ public class MainActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= 23) {
                 int hasWritePermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
                 if (hasWritePermission != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_PERMISSION_REQUEST);
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            WRITE_PERMISSION_REQUEST);
                 }
             }
             showSongAddingDialog();
@@ -350,13 +358,13 @@ public class MainActivity extends AppCompatActivity {
                     "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
             song_2.setIsPhotoFromURL(true);
 
-            Song song_3 = new Song("The Man In Me", "Bob Dylan",
-                    "http://www.syntax.org.il/xtra/bob2.mp3",
-                    "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
+            Song song_3 = new Song("One More Cup Of Coffee", "Bob Dylan",
+                    "http://www.syntax.org.il/xtra/bob.m4a",
+                    "https://www.needsomefun.net/wp-content/uploads/2015/09/one_more_cup_of_cofee.jpg");
             song_2.setIsPhotoFromURL(true);
-            Song song_4 = new Song("The Man In Me", "Bob Dylan",
-                    "http://www.syntax.org.il/xtra/bob2.mp3",
-                    "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
+            Song song_4 = new Song("Sara", "Bob Dylan",
+                    "http://www.syntax.org.il/xtra/bob1.m4a",
+                    "https://images.rapgenius.com/f9fa75848596b53395fe7f6ccd25844c.619x414x1.jpg");
             song_2.setIsPhotoFromURL(true);
             Song song_5 = new Song("The Man In Me", "Bob Dylan",
                     "http://www.syntax.org.il/xtra/bob2.mp3",
@@ -381,7 +389,7 @@ public class MainActivity extends AppCompatActivity {
     private void initializeService() {
         /**<-------Passing on an instance of the play button so the
          *           service will be able to change the button too------->**/
-        mService.setMainPlayBtn(play_btn);
+        mService.setMainPlayBtn(playBtn);
         /**<-------Initializing song list------->**/
         mService.setSongList(mSongs);
         /**<-------Passing on an instance of the song adapter so the
@@ -437,7 +445,25 @@ public class MainActivity extends AppCompatActivity {
         btn_confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /**<-------Saves the user's score------->*/
+                /**<-------If the song that the user intend to delete is playing right now
+                 * than move on to the next song and delete the current song. If the song the user
+                 * intend to delete is the current song but it isn't playing than move on to the
+                 *                      next song and pause it.------->*/
+                if (songPosition == MusicService.getCurrentSongPosition()) {
+                    MusicService.setCurrentSongPosition(MusicService.getCurrentSongPosition() - 1);
+                    if (mService.isPlaying()) {
+                        nextBtn.performClick();
+                    } else {
+                        nextBtn.performClick();
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                playBtn.performClick();
+                            }
+                        }, 250);
+                    }
+                }
+
                 mSongs.remove(songPosition);
                 mSongAdapter.notifyItemRemoved(songPosition);
                 if (mService != null) {
@@ -514,7 +540,7 @@ public class MainActivity extends AppCompatActivity {
                 /**<-------Checking if the user entered all the details------->*/
                 if (songName.trim().length() < 1 || songArtist.trim().length() < 1
                         || songURL.trim().length() < 1) {
-                    Toast.makeText(MainActivity.this, "You must enter name, artist, and URL!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.dialog_add_error, Toast.LENGTH_SHORT).show();
                 } else {
                     Song song = new Song(songName, songArtist, songURL, photoUri);
 
