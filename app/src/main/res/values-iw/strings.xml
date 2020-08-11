@@ -5,8 +5,7 @@
     <string name="dark_mode">מצב לילה</string>
 
     <string name="add_song">הוסף שיר</string>
+    <string name="dialog_add_error">עליך להזין את שם השיר, שם האומן, וקישור לשיר!</string>
 
     <string name="dialog_deletion_title">אנא אשר/י כי ברצונך למחוק שיר זה</string>
-
-    <string name="dialog_add_error">עליך להזין את שם השיר, שם האומן, וקישור לשיר!</string>
 </resources>

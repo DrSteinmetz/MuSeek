@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private final int CAMERA_REQUEST = 1;
     private final int GALLERY_REQUEST = 2;
     private final int WRITE_PERMISSION_REQUEST = 7;
+    private RelativeLayout dlgPicturesLayout;
 
     private final String TAG = "MainActivity";
 
@@ -297,14 +298,6 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         } else if (item.getItemId() == R.id.add_song_op) {
-            /**<-------Requesting user permissions------->**/
-            if (Build.VERSION.SDK_INT >= 23) {
-                int hasWritePermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                if (hasWritePermission != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                            WRITE_PERMISSION_REQUEST);
-                }
-            }
             showSongAddingDialog();
         }
 
@@ -315,9 +308,11 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == CAMERA_REQUEST) {
-            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Can't take picture", Toast.LENGTH_SHORT).show();
+        if (requestCode == WRITE_PERMISSION_REQUEST) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                dlgPicturesLayout.setVisibility(View.VISIBLE);
+            } else {
+                dlgPicturesLayout.setVisibility(View.GONE);
             }
         }
     }
@@ -481,7 +476,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void showSongAddingDialog() {
-
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogTheme);
         View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_add_song,
                 (RelativeLayout) findViewById(R.id.layoutDialogContainer));
@@ -496,6 +490,16 @@ public class MainActivity extends AppCompatActivity {
         final ImageButton btn_camera = view.findViewById(R.id.btn_camera);
         final ImageButton btn_cancel = view.findViewById(R.id.btn_cancel);
         final ImageButton btn_confirm = view.findViewById(R.id.btn_confirm);
+        dlgPicturesLayout = view.findViewById(R.id.take_pic_layout);
+
+        /**<-------Requesting user permissions------->**/
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int hasWritePermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            if (hasWritePermission != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        WRITE_PERMISSION_REQUEST);
+            }
+        }
 
         final AlertDialog alertDialog = builder.create();
 
@@ -512,7 +516,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mFile = new File(Environment.getExternalStorageDirectory(),
-                        "song" + (mSongs != null ? mSongs.size() : 0) + ".jpg");
+                        "song" + System.nanoTime() + "pic.jpg");
                 mSelectedImage = FileProvider.getUriForFile(MainActivity.this,
                         "com.example.museseek.provider", mFile);
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -536,6 +540,8 @@ public class MainActivity extends AppCompatActivity {
                 String songArtist = artist_et.getText().toString();
                 String songURL = url_et.getText().toString();
                 String photoUri = mSelectedImage != null ? mSelectedImage.toString() : "";
+
+                Log.d(TAG, "onActivityResult: " + photoUri);
 
                 /**<-------Checking if the user entered all the details------->*/
                 if (songName.trim().length() < 1 || songArtist.trim().length() < 1

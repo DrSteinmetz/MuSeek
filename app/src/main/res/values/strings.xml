@@ -4,8 +4,7 @@
     <string name="dark_mode">Dark Mode</string>
 
     <string name="add_song">Add Song</string>
+    <string name="dialog_add_error">You must enter name, artist, and URL!</string>
 
     <string name="dialog_deletion_title">Are you sure you want to delete this song?</string>
-
-    <string name="dialog_add_error">You must enter name, artist, and URL!</string>
 </resources>

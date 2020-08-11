@@ -4,7 +4,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -29,7 +28,6 @@ public class SongPageActivity extends AppCompatActivity {
     private boolean mIsBound = false;
 
     private List<Song> mSongs = new ArrayList<>();
-    private MediaPlayer mMediaPlayer;
 
     private ImageView mPhotoIv;
     private TextView mNameTv;
@@ -49,10 +47,7 @@ public class SongPageActivity extends AppCompatActivity {
     private TextView mSongTimerStart;
     private TextView mSongTimerEnd;
 
-    private Runnable mRunnable;
-
     private boolean mIsDarkMode;
-    private boolean mIsRestarted;
 
     private final String TAG = "SongPage";
 
@@ -131,12 +126,12 @@ public class SongPageActivity extends AppCompatActivity {
 
                     int position = MusicService.getCurrentSongPosition();
 
-                    Log.d(TAG, "onNextClick: " + position);
+                    Log.d(TAG, "ServiceNextOnClick" + position);
 
-                    String photoPath = mSongs.get(position).getPhotoPath();
-                    String name = mSongs.get(position).getName();
-                    String artist = mSongs.get(position).getArtist();
-                    initializeSongPage(name, artist, photoPath);
+                    mName = mSongs.get(position).getName();
+                    mArtist = mSongs.get(position).getArtist();
+                    mPhotoPath = mSongs.get(position).getPhotoPath();
+                    initializeSongPage(mName, mArtist, mPhotoPath);
                 }
             }
         });
@@ -162,10 +157,12 @@ public class SongPageActivity extends AppCompatActivity {
 
                     int position = MusicService.getCurrentSongPosition();
 
-                    String photoPath = mSongs.get(position).getPhotoPath();
-                    String name = mSongs.get(position).getName();
-                    String artist = mSongs.get(position).getArtist();
-                    initializeSongPage(name, artist, photoPath);
+                    Log.d(TAG, "ServicePrevOnClick" + position);
+
+                    mName = mSongs.get(position).getName();
+                    mArtist = mSongs.get(position).getArtist();
+                    mPhotoPath = mSongs.get(position).getPhotoPath();
+                    initializeSongPage(mName, mArtist, mPhotoPath);
                 }
             }
         });
@@ -189,48 +186,8 @@ public class SongPageActivity extends AppCompatActivity {
 
             initializeSongPage(mName, mArtist, mPhotoPath);
 
-            mMediaPlayer = mService.getMediaPlayer();
-
-            if (mMediaPlayer.isPlaying()) {
-                mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-            } else {
-                mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
-            }
-
-            if (!mIsRestarted && mService != null) {
-                Log.d(TAG, "onServiceConnected: Initializing seekBar");
-
-                mSongSeekBar.setMax(mMediaPlayer.getDuration());
-                mSongSeekBar.setProgress(0);
-                mRunnable = mService.getRunnable();
-                mRunnable.run();
-
-                mSongSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        if (mMediaPlayer != null && !fromUser) {
-                            mSongTimerStart.setText(milliSecondsToTimer(mMediaPlayer.getCurrentPosition()));
-                            mSongTimerEnd.setText(milliSecondsToTimer(mMediaPlayer.getDuration() - mMediaPlayer.getCurrentPosition()));
-                        }
-
-                        if (fromUser) {
-                            mSongTimerStart.setText(milliSecondsToTimer(progress));
-                            mSongTimerEnd.setText(milliSecondsToTimer(mMediaPlayer.getDuration() - progress));
-                        }
-                    }
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                        if (mMediaPlayer != null) {
-                            mMediaPlayer.seekTo(seekBar.getProgress());
-                        }
-                    }
-                });
-            }
+            /**<-------Initializing the SeekBar------->**/
+            mService.initializeSeekBar();
         }
 
         @Override
@@ -279,40 +236,6 @@ public class SongPageActivity extends AppCompatActivity {
         mService.setSongList(mSongs);
     }
 
-    private String milliSecondsToTimer(long milliseconds){
-        String finalTimerString = "";
-        String secondsString = "";
-        String minutesString = "";
-
-        /**<-------Convert total duration into time------->**/
-        int hours = (int) (milliseconds / (1000 * 60 * 60));
-        int minutes = (int) (milliseconds % (1000 * 60 * 60)) / (1000 * 60);
-        int seconds = (int) ((milliseconds % (1000 * 60 * 60)) % (1000 * 60) / 1000);
-        /**<-------Add hours if there------->**/
-        if (hours > 0) {
-            finalTimerString = hours + ":";
-        }
-
-        /**<-------Prepending 0 to seconds if it is one digit------->**/
-        secondsString = (seconds < 10 ? "0" + seconds : "" + seconds);
-        /**<-------Prepending 0 to minutes if it is one digit------->**/
-        minutesString = (minutes < 10 ? "0" + minutes : "" + minutes);
-
-        finalTimerString = finalTimerString + minutesString + ":" + secondsString;
-
-        /**<-------Return timer string------->**/
-        return finalTimerString;
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-
-        mIsRestarted = true;
-
-        Log.d(TAG, "onRestart");
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -320,6 +243,24 @@ public class SongPageActivity extends AppCompatActivity {
         doBindService();
 
         Log.d(TAG, "onStart");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mService != null) {
+            if (mService.isPlaying()) {
+                mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                Log.d(TAG, "Pause");
+            } else {
+                mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                Log.d(TAG, "Play");
+            }
+        } else {
+            mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+            Log.d(TAG, "Default Pause");
+        }
     }
 
     @Override

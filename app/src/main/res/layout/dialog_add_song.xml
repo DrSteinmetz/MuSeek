@@ -121,47 +121,54 @@
             android:maxLines="1"
             android:inputType="textUri"/>
 
-        <TextView
-            android:id="@+id/take_pic_tv"
-            android:layout_width="match_parent"
+        <RelativeLayout
+            android:id="@+id/take_pic_layout"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/song_url_et"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginBottom="10dp"
-            android:text="Pick the Song's Image"
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark"
-            android:textStyle="italic"
-            android:textAllCaps="false"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"/>
+            android:layout_below="@id/song_url_et">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_below="@id/take_pic_tv"
-            android:layout_marginBottom="50dp"
-            android:gravity="center">
+            <TextView
+                android:id="@+id/take_pic_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="10dp"
+                android:text="Pick the Song's Image"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimaryDark"
+                android:textStyle="italic"
+                android:textAllCaps="false"
+                android:gravity="center"
+                android:layout_centerHorizontal="true"/>
 
-            <ImageButton
-                android:id="@+id/btn_gallery"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginEnd="30dp"
-                android:src="@drawable/ic_twotone_image_search_white_100"
-                android:background="@color/colorTransparent"
-                android:scaleType="fitXY"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_below="@id/take_pic_tv"
+                android:layout_marginBottom="50dp"
+                android:gravity="center">
 
-            <ImageButton
-                android:id="@+id/btn_camera"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:src="@drawable/ic_twotone_photo_camera_white_100"
-                android:background="@color/colorTransparent"
-                android:scaleType="fitXY"/>
+                <ImageButton
+                    android:id="@+id/btn_gallery"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginEnd="30dp"
+                    android:src="@drawable/ic_twotone_image_search_white_100"
+                    android:background="@color/colorTransparent"
+                    android:scaleType="fitXY"/>
 
-        </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btn_camera"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/ic_twotone_photo_camera_white_100"
+                    android:background="@color/colorTransparent"
+                    android:scaleType="fitXY"/>
+
+            </LinearLayout>
+
+        </RelativeLayout>
 
     </RelativeLayout>
 

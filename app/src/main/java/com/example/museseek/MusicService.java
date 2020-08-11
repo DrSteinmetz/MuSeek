@@ -29,7 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MusicService extends Service
-        implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener {
+        implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener,
+        MediaPlayer.OnErrorListener {
 
     private MediaPlayer mMediaPlayer = new MediaPlayer();
 
@@ -78,6 +79,12 @@ public class MusicService extends Service
     public void onCreate() {
         super.onCreate();
 
+        mMediaPlayer.setOnPreparedListener(this);
+        mMediaPlayer.setOnCompletionListener(this);
+        mMediaPlayer.setOnErrorListener(this);
+        mMediaPlayer.reset();
+
+        /**<-------Initializing the runnable for the SeekBar------->**/
         mRunnable = new Runnable() {
             @Override
             public void run() {
@@ -87,10 +94,6 @@ public class MusicService extends Service
                 mHandler.postDelayed(mRunnable, 1000);
             }
         };
-
-        mMediaPlayer.setOnPreparedListener(this);
-        mMediaPlayer.setOnCompletionListener(this);
-        mMediaPlayer.reset();
     }
 
     @Override
@@ -108,7 +111,6 @@ public class MusicService extends Service
                             Log.d(TAG, "onStartCommand: mSongs.size(): " + mSongs.size());
                             mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
                             mMediaPlayer.prepareAsync();
-//                            mMediaPlayer.prepare();
                             createNotification();
                             mIsInitialized = true;
                         } else {
@@ -187,9 +189,6 @@ public class MusicService extends Service
     @Override
     public void onPrepared(MediaPlayer mp) {
         Log.d(TAG, "onPrepared");
-        if (mRunnable != null) {
-            mHandler.removeCallbacks(mRunnable);
-        }
 
         if (mMediaPlayer != null) {
             Log.d(TAG, "onPrepared: Duration: " + mMediaPlayer.getDuration());
@@ -220,40 +219,25 @@ public class MusicService extends Service
 
             /**<-------Performing UI changes------->**/
             songAdapter.notifyDataSetChanged();
+            initializeSeekBar();
+        }
+    }
 
-            if (pageSeekBar != null) {
-                pageSeekBar.setMax(mMediaPlayer.getDuration());
-                pageSeekBar.setProgress(0);
-                mRunnable.run();
-
-                pageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        if (mMediaPlayer != null && !fromUser) {
-                            pageTimerStartTv.setText(milliSecondsToTimer(mMediaPlayer.getCurrentPosition()));
-                            pageTimerEndTv.setText(milliSecondsToTimer(
-                                    mMediaPlayer.getDuration() - mMediaPlayer.getCurrentPosition()));
-                        }
-
-                        if (fromUser) {
-                            pageTimerStartTv.setText(milliSecondsToTimer(progress));
-                            pageTimerEndTv.setText(milliSecondsToTimer(mMediaPlayer.getDuration() - progress));
-                        }
-                    }
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                        if (mMediaPlayer != null) {
-                            mMediaPlayer.seekTo(seekBar.getProgress());
-                        }
-                    }
-                });
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        if (mMediaPlayer != null) {
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.stop();
+            }
+            mMediaPlayer.reset();
+            try {
+                mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
+                mMediaPlayer.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
+        return true;
     }
 
     private void moveSong(boolean isNext) {
@@ -286,7 +270,6 @@ public class MusicService extends Service
         try {
             mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
             mMediaPlayer.prepareAsync();
-//            mMediaPlayer.prepare();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -377,7 +360,46 @@ public class MusicService extends Service
         startForeground(NOTIFICATION_ID, mNotification);
     }
 
-    private String milliSecondsToTimer(long milliseconds){
+    public void initializeSeekBar() {
+        if (mRunnable != null) {
+            mHandler.removeCallbacks(mRunnable);
+        }
+
+        if (pageSeekBar != null) {
+            Log.d(TAG, "initializeSeekBar");
+
+            pageSeekBar.setMax(mMediaPlayer.getDuration());
+            mHandler.post(mRunnable);
+
+            pageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if (mMediaPlayer != null && !fromUser) {
+                        pageTimerStartTv.setText(milliSecondsToTimer(mMediaPlayer.getCurrentPosition()));
+                        pageTimerEndTv.setText(milliSecondsToTimer(mMediaPlayer.getDuration() - mMediaPlayer.getCurrentPosition()));
+                    }
+
+                    if (fromUser) {
+                        pageTimerStartTv.setText(milliSecondsToTimer(progress));
+                        pageTimerEndTv.setText(milliSecondsToTimer(mMediaPlayer.getDuration() - progress));
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    if (mMediaPlayer != null) {
+                        mMediaPlayer.seekTo(seekBar.getProgress());
+                    }
+                }
+            });
+        }
+    }
+
+    private String milliSecondsToTimer(long milliseconds) {
         String finalTimerString = "";
         String secondsString = "";
         String minutesString = "";
@@ -402,6 +424,7 @@ public class MusicService extends Service
         return finalTimerString;
     }
 
+
     public static int getCurrentSongPosition() {
         return currentSongPosition;
     }
@@ -417,11 +440,10 @@ public class MusicService extends Service
     }
 
     public boolean isPlaying() {
-        return mIsPlaying;
-    }
-
-    public MediaPlayer getMediaPlayer() {
-        return mMediaPlayer;
+        if (mMediaPlayer != null) {
+            return mMediaPlayer.isPlaying();
+        }
+        return false;
     }
 
     public void setMainPlayBtn(ImageButton mainPlayBtn) {
@@ -440,6 +462,18 @@ public class MusicService extends Service
         this.pagePrevBtn = pagePrevBtn;
     }
 
+    public void setPageSeekBar(SeekBar pageSeekBar) {
+        this.pageSeekBar = pageSeekBar;
+    }
+
+    public void setPageTimerStartTv(TextView pageTimerStartTv) {
+        this.pageTimerStartTv = pageTimerStartTv;
+    }
+
+    public void setPageTimerEndTv(TextView pageTimerEndTv) {
+        this.pageTimerEndTv = pageTimerEndTv;
+    }
+
     public List<Song> getSongList() {
         return mSongs;
     }
@@ -456,21 +490,6 @@ public class MusicService extends Service
         this.songAdapter = songAdapter;
     }
 
-    public void setPageSeekBar(SeekBar pageSeekBar) {
-        this.pageSeekBar = pageSeekBar;
-    }
-
-    public void setPageTimerStartTv(TextView pageTimerStartTv) {
-        this.pageTimerStartTv = pageTimerStartTv;
-    }
-
-    public void setPageTimerEndTv(TextView pageTimerEndTv) {
-        this.pageTimerEndTv = pageTimerEndTv;
-    }
-
-    public Runnable getRunnable() {
-        return mRunnable;
-    }
 
     @Override
     public void onDestroy() {
