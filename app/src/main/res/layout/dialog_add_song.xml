@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layoutDialogContainer"
     android:layout_margin="20dp"
     android:padding="20dp">
@@ -10,122 +11,107 @@
         android:id="@+id/layoutDialog"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/dialog_background"
-        android:layout_centerHorizontal="true">
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/dialog_background">
 
         <TextView
-            android:id="@+id/txt_title"
+            android:id="@+id/title_tv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             android:padding="10dp"
-            android:text="Add New Song!"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"
+            android:text="@string/dlg_add_title_tv"
             android:textSize="25sp"
             android:textColor="@color/colorAccent"
             android:textStyle="bold"
-            android:textAllCaps="false"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"/>
+            android:textAllCaps="false"/>
 
-        <TextView
-            android:id="@+id/song_name_tv"
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/song_name_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/txt_title"
-            android:layout_marginHorizontal="20dp"
-            android:text="Song Name"
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark"
-            android:textStyle="italic"
-            android:textAllCaps="false"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"/>
-        <EditText
-            android:id="@+id/song_name_et"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/song_name_tv"
-            android:padding="10dp"
-            android:layout_marginTop="5dp"
+            android:layout_below="@id/title_tv"
+            android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:layout_marginHorizontal="20dp"
-            android:hint="Please Enter song's name..."
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimary"
-            android:background="@drawable/view_selector"
-            android:textCursorDrawable="@color/colorPrimary"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"
-            android:maxLines="1"/>
+            android:layout_marginHorizontal="30dp"
+            android:hint="@string/dlg_add_song_name_et">
 
-        <TextView
-            android:id="@+id/song_artist_tv"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/song_name_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:inputType="text"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimary"
+                android:background="@drawable/edit_text_selector"
+                android:textCursorDrawable="@color/colorPrimary"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/song_artist_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/song_name_et"
-            android:layout_marginHorizontal="20dp"
-            android:text="Artist Name"
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark"
-            android:textStyle="italic"
-            android:textAllCaps="false"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"/>
-        <EditText
-            android:id="@+id/song_artist_et"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/song_artist_tv"
-            android:padding="10dp"
-            android:layout_marginTop="5dp"
+            android:layout_below="@id/song_name_layout"
+            android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:layout_marginHorizontal="20dp"
-            android:hint="Please Enter the artist..."
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimary"
-            android:background="@drawable/view_selector"
-            android:textCursorDrawable="@color/colorPrimary"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"
-            android:maxLines="1"/>
+            android:layout_marginHorizontal="30dp"
+            android:hint="@string/dlg_add_song_artist_et">
 
-        <TextView
-            android:id="@+id/song_url_tv"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/song_artist_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:inputType="text"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimary"
+                android:background="@drawable/edit_text_selector"
+                android:textCursorDrawable="@color/colorPrimary"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/song_url_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/song_artist_et"
-            android:layout_marginHorizontal="20dp"
-            android:text="Song's Link"
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark"
-            android:textStyle="italic"
-            android:textAllCaps="false"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"/>
-        <EditText
-            android:id="@+id/song_url_et"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/song_url_tv"
-            android:padding="10dp"
-            android:layout_marginTop="5dp"
+            android:layout_below="@id/song_artist_layout"
+            android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:layout_marginHorizontal="20dp"
-            android:hint="Please Enter the song's URL..."
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimary"
-            android:background="@drawable/view_selector"
-            android:textCursorDrawable="@color/colorPrimary"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"
-            android:maxLines="1"
-            android:inputType="textUri"/>
+            android:layout_marginHorizontal="30dp"
+            android:hint="@string/dlg_add_song_url_et">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/song_url_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="3dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:inputType="textUri"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimary"
+                android:background="@drawable/edit_text_selector"
+                android:textCursorDrawable="@color/colorPrimary"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
 
         <RelativeLayout
             android:id="@+id/take_pic_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/song_url_et">
+            android:layout_below="@id/song_url_layout">
 
             <TextView
                 android:id="@+id/take_pic_tv"
@@ -133,9 +119,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginBottom="10dp"
-                android:text="Pick the Song's Image"
+                android:text="@string/dlg_add_image_tv"
                 android:textSize="20sp"
-                android:textColor="@color/colorPrimaryDark"
+                android:textColor="@color/colorAccent"
                 android:textStyle="italic"
                 android:textAllCaps="false"
                 android:gravity="center"
@@ -154,7 +140,7 @@
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_marginEnd="30dp"
-                    android:src="@drawable/ic_twotone_image_search_white_100"
+                    android:src="@drawable/dlg_gallery_btn_selector"
                     android:background="@color/colorTransparent"
                     android:scaleType="fitXY"/>
 
@@ -162,7 +148,8 @@
                     android:id="@+id/btn_camera"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:src="@drawable/ic_twotone_photo_camera_white_100"
+                    android:layout_marginTop="3dp"
+                    android:src="@drawable/dlg_camera_btn_selector"
                     android:background="@color/colorTransparent"
                     android:scaleType="fitXY"/>
 
@@ -179,7 +166,7 @@
         android:layout_height="50dp"
         android:layout_alignBottom="@id/btn_dummy"
         android:layout_toStartOf="@id/btn_dummy"
-        android:src="@drawable/ic_cancel_btn"
+        android:src="@drawable/dlg_x_btn_selector"
         android:background="@color/colorTransparent"
         android:scaleType="fitCenter"/>
 
@@ -198,7 +185,7 @@
         android:layout_height="50dp"
         android:layout_alignBottom="@id/btn_dummy"
         android:layout_toEndOf="@id/btn_dummy"
-        android:src="@drawable/ic_confirm_btn"
+        android:src="@drawable/dlg_v_btn_selector"
         android:background="@color/colorTransparent"
         android:scaleType="fitCenter"/>
 

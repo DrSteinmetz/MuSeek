@@ -3,8 +3,19 @@
 
     <string name="dark_mode">Dark Mode</string>
 
-    <string name="add_song">Add Song</string>
-    <string name="dialog_add_error">You must enter name, artist, and URL!</string>
+    <string name="main_control_bar_song_name_tv">Welcome!</string>
 
-    <string name="dialog_deletion_title">Are you sure you want to delete this song?</string>
+    <string name="add_song">Add Song</string>
+    <string name="dlg_add_title_tv">Add a New Song!</string>
+    <string name="dlg_add_song_name_et">Song\'s Name</string>
+    <string name="dlg_add_song_artist_et">Artist</string>
+    <string name="dlg_add_song_url_et">Song\'s URL</string>
+    <string name="dlg_add_image_tv">Pick the Song\'s Image</string>
+    <string name="dlg_add_gallery_pic">Select Image</string>
+    <string name="dlg_add_error">You must enter name, artist, and URL!</string>
+    <string name="dlg_add_bad_url">Invalid URL!</string>
+
+    <string name="dlg_dlt_title">Are you sure you want to delete this song?</string>
+    <string name="dlg_dlt_undo_tv">Song Deleted</string>
+    <string name="dlg_dlt_undo_btn">Undo</string>
 </resources>

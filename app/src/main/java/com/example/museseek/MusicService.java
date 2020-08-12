@@ -1,5 +1,6 @@
 package com.example.museseek;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -12,8 +13,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -22,6 +25,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.NotificationTarget;
 
 import java.io.IOException;
@@ -48,8 +52,12 @@ public class MusicService extends Service
     private boolean mIsPlaying = false;
 
 
-    private ImageButton mainPlayBtn;
     private SongAdapter songAdapter;
+
+    private ImageButton mainPlayBtn;
+    private ImageView mainControlBarImage;
+    private TextView mainControlBarName;
+    private TextView mainControlBarArtist;
 
     private ImageButton pagePlayBtn;
     private Button pageNextBtn;
@@ -96,6 +104,7 @@ public class MusicService extends Service
         };
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getStringExtra("action");
@@ -186,10 +195,9 @@ public class MusicService extends Service
         Log.d(TAG, "onCompletion");
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     public void onPrepared(MediaPlayer mp) {
-        Log.d(TAG, "onPrepared");
-
         if (mMediaPlayer != null) {
             Log.d(TAG, "onPrepared: Duration: " + mMediaPlayer.getDuration());
             mMediaPlayer.start();
@@ -211,13 +219,43 @@ public class MusicService extends Service
                     mNotification,
                     NOTIFICATION_ID
             );
-            Glide.with(MusicService.this).asBitmap().load(song.getPhotoPath()).
-                    circleCrop().into(notificationTarget);
+
+            RequestOptions options = new RequestOptions()
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_default_song_pic)
+                    .error(R.drawable.ic_default_song_pic);
+
+            Glide.with(MusicService.this)
+                    .asBitmap()
+                    .load(song.getPhotoPath() == null ? R.drawable.ic_default_song_pic : song.getPhotoPath())
+                    .apply(options)
+                    .into(notificationTarget);
 
             mNotificationManager.notify(NOTIFICATION_ID, mNotification);
 
 
             /**<-------Performing UI changes------->**/
+            if (mainControlBarImage != null) {
+                Glide.with(MusicService.this)
+                        .asBitmap()
+                        .load(song.getPhotoPath())
+                        .apply(options)
+                        .into(mainControlBarImage);
+            }
+            if (mainControlBarName != null) {
+                mainControlBarName.setText(song.getName());
+                mainControlBarName.setSelected(true);
+            }
+            if (mainControlBarArtist != null) {
+                mainControlBarArtist.setVisibility(View.VISIBLE);
+                mainControlBarArtist.setText(song.getArtist());
+                mainControlBarArtist.setSelected(true);
+            }
+
+            if (pagePlayBtn != null) {
+                pagePlayBtn.setImageDrawable(getDrawable(
+                        R.drawable.ic_round_pause_white_100));
+            }
             songAdapter.notifyDataSetChanged();
             initializeSeekBar();
         }
@@ -225,6 +263,7 @@ public class MusicService extends Service
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        Log.d(TAG, "onError: " + what);
         if (mMediaPlayer != null) {
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.stop();
@@ -318,7 +357,7 @@ public class MusicService extends Service
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelID);
-        builder.setSmallIcon(R.drawable.ic_round_music_note_grey_50).setOnlyAlertOnce(true).
+        builder.setSmallIcon(R.drawable.ic_museek_notif_icon).setOnlyAlertOnce(true).
                 setPriority(Notification.PRIORITY_MAX).setContentTitle("MuSeek");
 
         mRemoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
@@ -369,19 +408,18 @@ public class MusicService extends Service
             Log.d(TAG, "initializeSeekBar");
 
             pageSeekBar.setMax(mMediaPlayer.getDuration());
-            mHandler.post(mRunnable);
+            pageTimerEndTv.setText(milliSecondsToTimer(mMediaPlayer.getDuration()));
+            mRunnable.run();
 
             pageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     if (mMediaPlayer != null && !fromUser) {
                         pageTimerStartTv.setText(milliSecondsToTimer(mMediaPlayer.getCurrentPosition()));
-                        pageTimerEndTv.setText(milliSecondsToTimer(mMediaPlayer.getDuration() - mMediaPlayer.getCurrentPosition()));
                     }
 
                     if (fromUser) {
                         pageTimerStartTv.setText(milliSecondsToTimer(progress));
-                        pageTimerEndTv.setText(milliSecondsToTimer(mMediaPlayer.getDuration() - progress));
                     }
                 }
 
@@ -448,6 +486,18 @@ public class MusicService extends Service
 
     public void setMainPlayBtn(ImageButton mainPlayBtn) {
         this.mainPlayBtn = mainPlayBtn;
+    }
+
+    public void setMainControlBarImage(ImageView mainControlBarImage) {
+        this.mainControlBarImage = mainControlBarImage;
+    }
+
+    public void setMainControlBarName(TextView mainControlBarName) {
+        this.mainControlBarName = mainControlBarName;
+    }
+
+    public void setMainControlBarArtist(TextView mainControlBarArtist) {
+        this.mainControlBarArtist = mainControlBarArtist;
     }
 
     public void setPagePlayBtn(ImageButton pagePlayBtn) {

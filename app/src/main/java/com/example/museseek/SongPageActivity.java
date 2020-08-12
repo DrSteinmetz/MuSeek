@@ -1,5 +1,6 @@
 package com.example.museseek;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -38,16 +39,12 @@ public class SongPageActivity extends AppCompatActivity {
     private String mArtist;
 
     private ImageButton mPlayBtn;
-    private ImageButton mNextBtn;
-    private ImageButton mPrevBtn;
     private Button mServiceNextBtn;
     private Button mServicePrevBtn;
 
     private SeekBar mSongSeekBar;
     private TextView mSongTimerStart;
     private TextView mSongTimerEnd;
-
-    private boolean mIsDarkMode;
 
     private final String TAG = "SongPage";
 
@@ -59,9 +56,9 @@ public class SongPageActivity extends AppCompatActivity {
         mPhotoPath = getIntent().getStringExtra("photo_path");
         mName = getIntent().getStringExtra("name");
         mArtist = getIntent().getStringExtra("artist");
-        mIsDarkMode = getIntent().getBooleanExtra("is_dark", false);
+        boolean isDarkMode = getIntent().getBooleanExtra("is_dark", false);
 
-        if (mIsDarkMode) {
+        if (isDarkMode) {
             findViewById(R.id.song_page_layout).setBackgroundColor(getColor(R.color.colorGrey));
         } else {
             findViewById(R.id.song_page_layout).setBackgroundColor(getColor(R.color.colorAccent));
@@ -75,24 +72,21 @@ public class SongPageActivity extends AppCompatActivity {
         mNameTv = findViewById(R.id.details_name_tv);
         mArtistTv = findViewById(R.id.details_artist_tv);
 
+
         /**<-------Initializing control bar------->**/
         mPlayBtn = findViewById(R.id.play_btn);
 
-        mNextBtn = findViewById(R.id.next_btn);
+        ImageButton nextBtn = findViewById(R.id.next_btn);
         mServiceNextBtn = findViewById(R.id.service_next_btn);
 
-        mPrevBtn = findViewById(R.id.previous_btn);
+        ImageButton prevBtn = findViewById(R.id.previous_btn);
         mServicePrevBtn = findViewById(R.id.service_previous_btn);
 
 
         mPlayBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mService.isPlaying()) {
-                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
-                } else {
-                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-                }
+                initializePlayButton();
 
                 Intent intent = new Intent(SongPageActivity.this, MusicService.class);
                 if (!mService.isInitialized()) {
@@ -106,12 +100,10 @@ public class SongPageActivity extends AppCompatActivity {
         });
 
 
-        mNextBtn.setOnClickListener(new View.OnClickListener() {
+        nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-
                     Intent intent = new Intent(SongPageActivity.this, MusicService.class);
                     intent.putExtra("action", "next");
                     startService(intent);
@@ -122,8 +114,6 @@ public class SongPageActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-
                     int position = MusicService.getCurrentSongPosition();
 
                     Log.d(TAG, "ServiceNextOnClick" + position);
@@ -137,12 +127,10 @@ public class SongPageActivity extends AppCompatActivity {
         });
 
 
-        mPrevBtn.setOnClickListener(new View.OnClickListener() {
+        prevBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-
                     Intent intent = new Intent(SongPageActivity.this, MusicService.class);
                     intent.putExtra("action", "previous");
                     startService(intent);
@@ -153,8 +141,6 @@ public class SongPageActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-
                     int position = MusicService.getCurrentSongPosition();
 
                     Log.d(TAG, "ServicePrevOnClick" + position);
@@ -186,6 +172,8 @@ public class SongPageActivity extends AppCompatActivity {
 
             initializeSongPage(mName, mArtist, mPhotoPath);
 
+            initializePlayButton();
+
             /**<-------Initializing the SeekBar------->**/
             mService.initializeSeekBar();
         }
@@ -216,8 +204,8 @@ public class SongPageActivity extends AppCompatActivity {
 
     private void initializeSongPage(String name, String artist, String photoPath) {
         RequestOptions options = new RequestOptions().
-                placeholder(R.mipmap.ic_launcher_round).
-                error(R.mipmap.ic_launcher_round);
+                placeholder(R.drawable.ic_default_song_pic).
+                error(R.drawable.ic_default_song_pic);
 
         Glide.with(this).
                 load(photoPath).
@@ -236,19 +224,8 @@ public class SongPageActivity extends AppCompatActivity {
         mService.setSongList(mSongs);
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        doBindService();
-
-        Log.d(TAG, "onStart");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
+    @SuppressLint("UseCompatLoadingForDrawables")
+    private void initializePlayButton() {
         if (mService != null) {
             if (mService.isPlaying()) {
                 mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
@@ -261,6 +238,15 @@ public class SongPageActivity extends AppCompatActivity {
             mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
             Log.d(TAG, "Default Pause");
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        doBindService();
+
+        Log.d(TAG, "onStart");
     }
 
     @Override
@@ -278,5 +264,11 @@ public class SongPageActivity extends AppCompatActivity {
 
         doUnbindService();
         Log.d(TAG, "onStop");
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(R.anim.enter_song_page, R.anim.leave_song_page);
     }
 }

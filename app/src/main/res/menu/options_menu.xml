@@ -5,14 +5,14 @@
     <item
         android:id="@+id/add_song_op"
         android:title="@string/add_song"
-        android:icon="@drawable/ic_round_playlist_add_white_100"
+        android:icon="@drawable/add_song_btn_selector"
         app:showAsAction="ifRoom"
         android:orderInCategory="0"/>
 
     <item
         android:id="@+id/dark_mode_op"
         android:title="@string/dark_mode"
-        android:icon="@drawable/ic_round_dark_mode_white_100"
+        android:icon="@drawable/dark_mode_btn_selector"
         app:showAsAction="ifRoom"
         android:orderInCategory="1"/>
 

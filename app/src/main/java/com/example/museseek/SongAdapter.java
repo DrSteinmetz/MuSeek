@@ -76,19 +76,18 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
         Song song = songs.get(position);
 
-        if (song.getPhotoPath() != null && song.getPhotoPath().trim().length() > 0) {
-            RequestOptions options = new RequestOptions().
-                    circleCrop().
-                    placeholder(R.mipmap.ic_launcher_round).
-                    error(R.mipmap.ic_launcher_round);
+        RequestOptions options = new RequestOptions().
+                circleCrop().
+                placeholder(R.drawable.ic_default_song_pic).
+                error(R.drawable.ic_default_song_pic);
 
-            Glide.with(context).
-                    load(song.getPhotoPath()).
-                    apply(options).
-                    into(holder.photoIv);
-        }
+        Glide.with(context).
+                load(song.getPhotoPath()).
+                apply(options).
+                into(holder.photoIv);
 
         holder.nameTv.setText(song.getName());
+        holder.nameTv.setSelected(true);
         holder.artistTv.setText(song.getArtist());
 
 

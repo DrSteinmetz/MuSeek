@@ -15,14 +15,17 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.util.Log;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,6 +36,10 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,12 +60,16 @@ public class MainActivity extends AppCompatActivity {
     private File mFile;
     private Uri mSelectedImage;
 
+    private RecyclerView mRecyclerView;
     private SongAdapter mSongAdapter;
     private List<Song> mSongs = new ArrayList<>();
 
-    private ImageButton playBtn;
-    private ImageButton nextBtn;
-    private ImageButton prevBtn;
+    private ImageButton mPlayBtn;
+    private ImageButton mNextBtn;
+    private ImageButton mPrevBtn;
+    private ImageView mControlBarImage;
+    private TextView mControlBarName;
+    private TextView mControlBarArtist;
 
     private final String SONG_PATH = "songs";
 
@@ -92,37 +103,62 @@ public class MainActivity extends AppCompatActivity {
 
 
         /**<-------Initializing control bar------->**/
-        playBtn = findViewById(R.id.play_btn);
-        nextBtn = findViewById(R.id.next_btn);
-        prevBtn = findViewById(R.id.previous_btn);
+        mControlBarImage = findViewById(R.id.control_bar_song_image);
+        mControlBarName = findViewById(R.id.control_bar_name_tv);
+        mControlBarArtist = findViewById(R.id.control_bar_artist_tv);
+        mPlayBtn = findViewById(R.id.play_btn);
+        mNextBtn = findViewById(R.id.next_btn);
+        mPrevBtn = findViewById(R.id.previous_btn);
+        Button controlBarSongPageBtn = findViewById(R.id.control_bar_song_page_btn);
 
-        playBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                /**<-------Changing Play/Pause button------->**/
-                if (mService.isPlaying()) {
-                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
-                } else {
-                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-                }
-
-                /**<-------Start the music------->**/
-                Intent intent = new Intent(MainActivity.this, MusicService.class);
-                if (!mService.isInitialized()) {
-                    initializeService();
-                    intent.putExtra("action", "initial");
-                } else {
-                    intent.putExtra("action", "play");
-                }
-                startService(intent);
-            }
-        });
-
-        nextBtn.setOnClickListener(new View.OnClickListener() {
+        controlBarSongPageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    int position = MusicService.getCurrentSongPosition();
+                    Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
+                    intent.putExtra("photo_path", mSongs.get(position).getPhotoPath());
+                    intent.putExtra("name", mSongs.get(position).getName());
+                    intent.putExtra("artist", mSongs.get(position).getArtist());
+                    intent.putExtra("is_dark", mIsDarkMode);
+                    startActivity(intent);
+                    overridePendingTransition(R.anim.enter_main, R.anim.leave_main);
+                }
+            }
+        });
+
+        mPlayBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService != null) {
+                    /**<-------Changing Play/Pause button------->**/
+                    if (mService.isPlaying()) {
+                        mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                    } else {
+                        mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    }
+
+                    /**<-------Start the music------->**/
+                    Intent intent = new Intent(MainActivity.this, MusicService.class);
+                    if (!mService.isInitialized()) {
+                        initializeService();
+                        intent.putExtra("action", "initial");
+                    } else {
+                        intent.putExtra("action", "play");
+                        if (mControlBarArtist.getVisibility() == View.GONE) {
+                            initializeControlBar();
+                        }
+                    }
+                    startService(intent);
+                }
+            }
+        });
+
+        mNextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService != null && mService.isInitialized()) {
+                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
 
                     Intent intent = new Intent(MainActivity.this, MusicService.class);
                     intent.putExtra("action", "next");
@@ -131,11 +167,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        prevBtn.setOnClickListener(new View.OnClickListener() {
+        mPrevBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mService.isInitialized()) {
-                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                if (mService != null && mService.isInitialized()) {
+                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
 
                     Intent intent = new Intent(MainActivity.this, MusicService.class);
                     intent.putExtra("action", "previous");
@@ -146,10 +182,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         /**<-------Initializing the RecyclerView------->**/
-        RecyclerView recyclerView = findViewById(R.id.recycler_view_layout);
-        recyclerView.setHasFixedSize(true);
+        mRecyclerView = findViewById(R.id.recycler_view_layout);
+        mRecyclerView.setHasFixedSize(true);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         mSongAdapter = new SongAdapter(mSongs, this);
 
@@ -157,14 +193,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSongClicked(int position, View view) {
                 if (mService.isPlaying()) {
-                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
                 }
 
                 if (MusicService.getCurrentSongPosition() != position) {
                     MusicService.setCurrentSongPosition(position);
 
-                    Log.d("onSongClicked(init)", "position: " + position);
-                    Log.d("onSongClicked(init)", "mSongs.size(): " + mSongs.size());
                     Intent musicIntent = new Intent(MainActivity.this, MusicService.class);
                     if (!mService.isInitialized()) {
                         initializeService();
@@ -174,15 +208,11 @@ public class MainActivity extends AppCompatActivity {
                 } else if (!mService.isInitialized()) {
                     MusicService.setCurrentSongPosition(position);
 
-                    Log.d("onSongClicked(notInit)", "position: " + position);
-                    Log.d("onSongClicked(notInit)", "mSongs.size(): " + mSongs.size());
                     Intent musicIntent = new Intent(MainActivity.this, MusicService.class);
                     initializeService();
                     musicIntent.putExtra("action", "initial");
                     startService(musicIntent);
                 }
-                Log.d("onSongClicked", "position: " + position);
-                Log.d("onSongClicked", "mSongs.size(): " + mSongs.size());
 
                 Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
                 intent.putExtra("photo_path", mSongs.get(position).getPhotoPath());
@@ -190,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("artist", mSongs.get(position).getArtist());
                 intent.putExtra("is_dark", mIsDarkMode);
                 startActivity(intent);
+                overridePendingTransition(R.anim.enter_main, R.anim.leave_main);
             }
         });
 
@@ -231,9 +262,9 @@ public class MainActivity extends AppCompatActivity {
         };
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
-        itemTouchHelper.attachToRecyclerView(recyclerView);
+        itemTouchHelper.attachToRecyclerView(mRecyclerView);
 
-        recyclerView.setAdapter(mSongAdapter);
+        mRecyclerView.setAdapter(mSongAdapter);
     }
 
     /**<-------Initializing MusicService connection methods------->**/
@@ -242,15 +273,17 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = ((MusicService.ServiceBinder) service).getService();
 
-            /**<-------Setting the play/pause button according to the Music service------->**/
+            /**<-------Sets the control bar according to the Music service------->**/
             if (mService != null) {
                 if (mService.isPlaying()) {
-                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
+                    initializeControlBar();
                 } else {
-                    playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                    mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                    mControlBarName.setText(R.string.main_control_bar_song_name_tv);
                 }
             } else {
-                playBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
+                mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
             }
 
             initializeService();
@@ -321,15 +354,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        Log.d("onActivityResult", "RESULT_OK = -1, resultCode = " + resultCode);
-        //Result canceled every time taking a pic with the camera...
-        Log.d("onActivityResult", "CAMERA_REQUEST = 1, requestCode = " + requestCode);
         if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
             mSelectedImage = Uri.parse(mFile.getAbsolutePath());
-            Log.d("onActivityResult", "CAMERA_REQUEST\n" + mSelectedImage.toString());
         } else if (requestCode == GALLERY_REQUEST && resultCode == RESULT_OK) {
             mSelectedImage = data.getData();
-            Log.d("onActivityResult", "GALLERY_REQUEST");
         }
     }
 
@@ -384,12 +412,35 @@ public class MainActivity extends AppCompatActivity {
     private void initializeService() {
         /**<-------Passing on an instance of the play button so the
          *           service will be able to change the button too------->**/
-        mService.setMainPlayBtn(playBtn);
+        mService.setMainPlayBtn(mPlayBtn);
+        mService.setMainControlBarImage(mControlBarImage);
+        mService.setMainControlBarName(mControlBarName);
+        mService.setMainControlBarArtist(mControlBarArtist);
         /**<-------Initializing song list------->**/
         mService.setSongList(mSongs);
         /**<-------Passing on an instance of the song adapter so the
          *           service will be able to change the UI too------->**/
         mService.setSongAdapter(mSongAdapter);
+    }
+
+    private void initializeControlBar() {
+        Song song = mSongs.get(MusicService.getCurrentSongPosition());
+
+        RequestOptions options = new RequestOptions()
+                .circleCrop()
+                .placeholder(R.drawable.ic_default_song_pic)
+                .error(R.drawable.ic_default_song_pic);
+
+        Glide.with(MainActivity.this)
+                .asBitmap()
+                .load(song.getPhotoPath())
+                .apply(options)
+                .into(mControlBarImage);
+        mControlBarName.setText(song.getName());
+        mControlBarName.setSelected(true);
+        mControlBarArtist.setVisibility(View.VISIBLE);
+        mControlBarArtist.setText(song.getArtist());
+        mControlBarArtist.setSelected(true);
     }
 
     private void readSongsFromFile() {
@@ -447,24 +498,37 @@ public class MainActivity extends AppCompatActivity {
                 if (songPosition == MusicService.getCurrentSongPosition()) {
                     MusicService.setCurrentSongPosition(MusicService.getCurrentSongPosition() - 1);
                     if (mService.isPlaying()) {
-                        nextBtn.performClick();
+                        mNextBtn.performClick();
                     } else {
-                        nextBtn.performClick();
+                        mNextBtn.performClick();
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                playBtn.performClick();
+                                mPlayBtn.performClick();
                             }
                         }, 250);
                     }
                 }
 
-                mSongs.remove(songPosition);
+                final Song song = mSongs.remove(songPosition);
                 mSongAdapter.notifyItemRemoved(songPosition);
                 if (mService != null) {
                     mService.setSongList(mSongs);
                 }
                 alertDialog.dismiss();
+
+                /**<-------Popping up SnackBar for the 'UNDO' option------->**/
+                Snackbar.make(mRecyclerView, R.string.dlg_dlt_undo_tv, Snackbar.LENGTH_LONG).
+                        setTextColor(getResources().getColor(R.color.colorPurple1, null)).
+                        setActionTextColor(getResources().getColor(R.color.colorAccent, null)).
+                        setBackgroundTint(getResources().getColor(R.color.colorPrimaryDark, null)).
+                        setAction(R.string.dlg_dlt_undo_btn, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                mSongs.add(songPosition, song);
+                                mSongAdapter.notifyItemInserted(songPosition);
+                            }
+                        }).show();
             }
         });
 
@@ -508,7 +572,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_PICK,
                         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(Intent.createChooser(intent, "Select Image"), GALLERY_REQUEST);
+                startActivityForResult(Intent.createChooser(intent,
+                        getResources().getString(R.string.dlg_add_gallery_pic)), GALLERY_REQUEST);
             }
         });
 
@@ -539,25 +604,28 @@ public class MainActivity extends AppCompatActivity {
                 String songName = name_et.getText().toString();
                 String songArtist = artist_et.getText().toString();
                 String songURL = url_et.getText().toString();
-                String photoUri = mSelectedImage != null ? mSelectedImage.toString() : "";
+                String photoUri = mSelectedImage != null ? mSelectedImage.toString() : null;
 
-                Log.d(TAG, "onActivityResult: " + photoUri);
-
-                /**<-------Checking if the user entered all the details------->*/
+                /**<-------Checks if the user entered all the details------->*/
                 if (songName.trim().length() < 1 || songArtist.trim().length() < 1
                         || songURL.trim().length() < 1) {
-                    Toast.makeText(MainActivity.this, R.string.dialog_add_error, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.dlg_add_error, Toast.LENGTH_SHORT).show();
                 } else {
-                    Song song = new Song(songName, songArtist, songURL, photoUri);
+                    /**<-------Checks if the user entered a valid URL------->*/
+                    if (Patterns.WEB_URL.matcher(songURL).matches()) {
+                        Song song = new Song(songName, songArtist, songURL, photoUri);
 
-                    mSongs.add(song);
-                    mSongAdapter.notifyItemInserted(mSongs.size() - 1);
-                    if (mService != null) {
-                        mService.setSongList(mSongs);
+                        mSongs.add(song);
+                        mSongAdapter.notifyItemInserted(mSongs.size() - 1);
+                        if (mService != null) {
+                            mService.setSongList(mSongs);
+                        }
+
+                        mSelectedImage = null;
+                        alertDialog.dismiss();
+                    } else {
+                        Toast.makeText(MainActivity.this, R.string.dlg_add_bad_url, Toast.LENGTH_SHORT).show();
                     }
-
-                    mSelectedImage = null;
-                    alertDialog.dismiss();
                 }
             }
         });
