@@ -48,39 +48,39 @@
         android:id="@+id/notif_song_name_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@id/notif_song_image"
         android:layout_below="@id/notif_title_layout"
         android:layout_marginStart="20dp"
         android:maxLines="1"
         android:ellipsize="end"
-        android:maxWidth="200dp"
         android:textSize="15sp"
         android:textStyle="bold"
         android:textColor="@color/colorNotificationGrey"
-        android:textAllCaps="false"
-        android:gravity="center"/>
+        android:textAllCaps="false"/>
 
     <TextView
         android:id="@+id/notif_song_artist_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@id/notif_song_image"
         android:layout_below="@id/notif_song_name_tv"
         android:layout_marginVertical="5dp"
         android:layout_marginStart="20dp"
         android:maxLines="1"
         android:ellipsize="end"
-        android:maxWidth="200dp"
         android:textSize="14sp"
         android:textColor="@color/colorNotificationGrey"
-        android:textAllCaps="false"
-        android:gravity="center"/>
+        android:textAllCaps="false"/>
 
     <ImageView
         android:id="@+id/notif_song_image"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginVertical="5dp"
-        android:layout_marginHorizontal="20dp"
-        android:layout_centerVertical="true"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="20dp"
+        android:layout_below="@id/notif_title_layout"
         android:layout_alignParentEnd="true"
         android:src="@drawable/ic_default_song_pic"
         android:background="@color/colorTransparent"/>
@@ -88,16 +88,15 @@
     <RelativeLayout
         android:id="@+id/notif_control_bar"
         android:layout_width="match_parent"
-        android:layout_height="25dp"
+        android:layout_height="40dp"
         android:layout_below="@+id/notif_song_artist_tv"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="10dp">
+        android:layout_marginVertical="5dp">
 
         <ImageButton
             android:id="@+id/notif_previous_btn"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="20dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="10dp"
             android:layout_centerVertical="true"
             android:src="@drawable/notif_next_btn_selector"
             android:background="@color/colorTransparent"
@@ -106,19 +105,19 @@
 
         <ImageButton
             android:id="@+id/notif_play_btn"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_centerVertical="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_toEndOf="@id/notif_previous_btn"
-            android:layout_marginHorizontal="20dp"
+            android:layout_centerVertical="true"
+            android:layout_marginHorizontal="10dp"
             android:src="@drawable/ic_round_play_arrow_grey_24"
             android:background="@color/colorTransparent"
             android:scaleType="fitXY"/>
 
         <ImageButton
             android:id="@+id/notif_next_btn"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:layout_centerVertical="true"
             android:layout_toEndOf="@id/notif_play_btn"
             android:src="@drawable/notif_next_btn_selector"
