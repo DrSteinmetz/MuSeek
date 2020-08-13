@@ -376,30 +376,26 @@ public class MainActivity extends AppCompatActivity {
             Song song_0 = new Song("One More Cup Of Coffee", "Bob Dylan",
                     "http://www.syntax.org.il/xtra/bob.m4a",
                     "https://www.needsomefun.net/wp-content/uploads/2015/09/one_more_cup_of_cofee.jpg");
-            song_0.setIsPhotoFromURL(true);
 
             Song song_1 = new Song("Sara", "Bob Dylan",
                     "http://www.syntax.org.il/xtra/bob1.m4a",
                     "https://images.rapgenius.com/f9fa75848596b53395fe7f6ccd25844c.619x414x1.jpg");
-            song_1.setIsPhotoFromURL(true);
 
             Song song_2 = new Song("The Man In Me", "Bob Dylan",
                     "http://www.syntax.org.il/xtra/bob2.mp3",
                     "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
-            song_2.setIsPhotoFromURL(true);
 
             Song song_3 = new Song("One More Cup Of Coffee", "Bob Dylan",
                     "http://www.syntax.org.il/xtra/bob.m4a",
                     "https://www.needsomefun.net/wp-content/uploads/2015/09/one_more_cup_of_cofee.jpg");
-            song_2.setIsPhotoFromURL(true);
+
             Song song_4 = new Song("Sara", "Bob Dylan",
                     "http://www.syntax.org.il/xtra/bob1.m4a",
                     "https://images.rapgenius.com/f9fa75848596b53395fe7f6ccd25844c.619x414x1.jpg");
-            song_2.setIsPhotoFromURL(true);
+
             Song song_5 = new Song("The Man In Me", "Bob Dylan",
                     "http://www.syntax.org.il/xtra/bob2.mp3",
                     "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
-            song_2.setIsPhotoFromURL(true);
 
             mSongs.add(song_0);
             mSongs.add(song_1);

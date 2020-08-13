@@ -76,8 +76,8 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
         Song song = songs.get(position);
 
+        holder.photoIv.setClipToOutline(true);
         RequestOptions options = new RequestOptions().
-                circleCrop().
                 placeholder(R.drawable.ic_default_song_pic).
                 error(R.drawable.ic_default_song_pic);
 
@@ -87,18 +87,21 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                 into(holder.photoIv);
 
         holder.nameTv.setText(song.getName());
-        holder.nameTv.setSelected(true);
         holder.artistTv.setText(song.getArtist());
 
 
         if (position == MusicService.getCurrentSongPosition() && !firstRun) {
             holder.cardLayout.setCardBackgroundColor(context.getResources().getColor(R.color.colorPurple1, null));
             holder.nameTv.setTextColor(context.getResources().getColor(R.color.colorPrimaryDark, null));
+            holder.nameTv.setSelected(true);
             holder.artistTv.setTextColor(context.getResources().getColor(R.color.colorPrimaryDark, null));
+            holder.artistTv.setSelected(true);
         } else {
             holder.cardLayout.setCardBackgroundColor(context.getResources().getColor(R.color.colorPrimary, null));
             holder.nameTv.setTextColor(context.getResources().getColor(R.color.colorAccent, null));
+            holder.nameTv.setSelected(false);
             holder.artistTv.setTextColor(context.getResources().getColor(R.color.colorAccent, null));
+            holder.artistTv.setSelected(false);
         }
         firstRun = false;
     }

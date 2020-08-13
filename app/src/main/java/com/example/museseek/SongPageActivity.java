@@ -41,6 +41,8 @@ public class SongPageActivity extends AppCompatActivity {
     private ImageButton mPlayBtn;
     private Button mServiceNextBtn;
     private Button mServicePrevBtn;
+    private ImageButton mShuffleBtn;
+    private ImageButton mRepeatBtn;
 
     private SeekBar mSongSeekBar;
     private TextView mSongTimerStart;
@@ -76,11 +78,14 @@ public class SongPageActivity extends AppCompatActivity {
         /**<-------Initializing control bar------->**/
         mPlayBtn = findViewById(R.id.play_btn);
 
-        ImageButton nextBtn = findViewById(R.id.next_btn);
+        final ImageButton nextBtn = findViewById(R.id.next_btn);
         mServiceNextBtn = findViewById(R.id.service_next_btn);
 
-        ImageButton prevBtn = findViewById(R.id.previous_btn);
+        final ImageButton prevBtn = findViewById(R.id.previous_btn);
         mServicePrevBtn = findViewById(R.id.service_previous_btn);
+
+        mShuffleBtn = findViewById(R.id.shuffle_btn);
+        mRepeatBtn = findViewById(R.id.repeat_btn);
 
 
         mPlayBtn.setOnClickListener(new View.OnClickListener() {
@@ -152,6 +157,36 @@ public class SongPageActivity extends AppCompatActivity {
                 }
             }
         });
+
+        mShuffleBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService != null) {
+                    if (mService.isShuffle()) {
+                        mService.setIsShuffle(false);
+                        mShuffleBtn.setImageDrawable(getDrawable(R.drawable.shuffle_btn_selector));
+                    } else {
+                        mService.setIsShuffle(true);
+                        mShuffleBtn.setImageDrawable(getDrawable(R.drawable.shuffle_btn_pressed_selector));
+                    }
+                }
+            }
+        });
+
+        mRepeatBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService != null) {
+                    if (mService.isRepeat()) {
+                        mService.setIsRepeat(false);
+                        mRepeatBtn.setImageDrawable(getDrawable(R.drawable.repeat_btn_selector));
+                    } else {
+                        mService.setIsRepeat(true);
+                        mRepeatBtn.setImageDrawable(getDrawable(R.drawable.repeat_btn_pressed_selector));
+                    }
+                }
+            }
+        });
     }
 
     /**<-------Initializing MusicService connection methods------->**/
@@ -214,6 +249,20 @@ public class SongPageActivity extends AppCompatActivity {
 
         mNameTv.setText(name);
         mArtistTv.setText(artist);
+
+        if (mService != null) {
+            if (mService.isShuffle()) {
+                mShuffleBtn.setImageDrawable(getDrawable(R.drawable.shuffle_btn_pressed_selector));
+            } else {
+                mShuffleBtn.setImageDrawable(getDrawable(R.drawable.shuffle_btn_selector));
+            }
+
+            if (mService.isRepeat()) {
+                mRepeatBtn.setImageDrawable(getDrawable(R.drawable.repeat_btn_pressed_selector));
+            } else {
+                mRepeatBtn.setImageDrawable(getDrawable(R.drawable.repeat_btn_selector));
+            }
+        }
     }
 
     private void initializeService() {

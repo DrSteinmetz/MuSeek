@@ -31,6 +31,7 @@ import com.bumptech.glide.request.target.NotificationTarget;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class MusicService extends Service
         implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener,
@@ -50,6 +51,10 @@ public class MusicService extends Service
 
     private boolean mIsInitialized = false;
     private boolean mIsPlaying = false;
+
+    private boolean mIsShuffle = false;
+    private boolean mIsRepeat = false;
+    /*private ArrayList<Long> SongsForShuffle = new ArrayList<>();*/
 
 
     private SongAdapter songAdapter;
@@ -153,6 +158,7 @@ public class MusicService extends Service
                                     R.drawable.ic_round_play_arrow_grey_24);
                         }
                     } else {
+                        mIsRepeat = false;
                         if (play()) {
                             /**<-------Performing UI changes------->**/
                             if (mainPlayBtn != null) {
@@ -280,25 +286,15 @@ public class MusicService extends Service
     }
 
     private void moveSong(boolean isNext) {
-        if (isNext) {
-            if (currentSongPosition < mSongs.size() - 1) {
-                currentSongPosition++;
+        if (!mIsRepeat) {
+            if (mIsShuffle) {
+                shuffle();
             } else {
-                currentSongPosition = 0;
-            }
-
-            if (pageNextBtn != null) {
-                pageNextBtn.performClick();
-            }
-        } else {
-            if (currentSongPosition <= 0) {
-                currentSongPosition = mSongs.size() - 1;
-            } else {
-                currentSongPosition--;
-            }
-
-            if (pagePrevBtn != null) {
-                pagePrevBtn.performClick();
+                if (isNext) {
+                    moveToNextSong();
+                } else {
+                    moveToPreviousSong();
+                }
             }
         }
 
@@ -358,7 +354,7 @@ public class MusicService extends Service
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelID);
         builder.setSmallIcon(R.drawable.ic_museek_notif_icon).setOnlyAlertOnce(true).
-                setPriority(Notification.PRIORITY_MAX).setContentTitle("MuSeek");
+                setPriority(Notification.PRIORITY_MAX).setContentTitle(getString(R.string.app_name));
 
         mRemoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
 
@@ -462,6 +458,44 @@ public class MusicService extends Service
         return finalTimerString;
     }
 
+    private void moveToNextSong() {
+        if (currentSongPosition < mSongs.size() - 1) {
+            currentSongPosition++;
+        } else {
+            currentSongPosition = 0;
+        }
+
+        if (pageNextBtn != null) {
+            pageNextBtn.performClick();
+        }
+    }
+
+    private void moveToPreviousSong() {
+        if (currentSongPosition <= 0) {
+            currentSongPosition = mSongs.size() - 1;
+        } else {
+            currentSongPosition--;
+        }
+
+        if (pagePrevBtn != null) {
+            pagePrevBtn.performClick();
+        }
+    }
+
+    private void shuffle() {
+        Random random = new Random();
+        int prevSong = currentSongPosition;
+
+        currentSongPosition = random.nextInt(mSongs.size());
+        while (currentSongPosition == prevSong) {
+            currentSongPosition = random.nextInt(mSongs.size());
+        }
+
+        if (pageNextBtn != null) {
+            pageNextBtn.performClick();
+        }
+    }
+
 
     public static int getCurrentSongPosition() {
         return currentSongPosition;
@@ -486,6 +520,22 @@ public class MusicService extends Service
 
     public void setMainPlayBtn(ImageButton mainPlayBtn) {
         this.mainPlayBtn = mainPlayBtn;
+    }
+
+    public boolean isShuffle() {
+        return mIsShuffle;
+    }
+
+    public void setIsShuffle(boolean isShuffle) {
+        this.mIsShuffle = isShuffle;
+    }
+
+    public boolean isRepeat() {
+        return mIsRepeat;
+    }
+
+    public void setIsRepeat(boolean isRepeat) {
+        this.mIsRepeat = isRepeat;
     }
 
     public void setMainControlBarImage(ImageView mainControlBarImage) {

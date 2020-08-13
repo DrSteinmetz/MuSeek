@@ -5,17 +5,22 @@ import androidx.annotation.NonNull;
 import java.io.Serializable;
 
 public class Song implements Serializable {
+    private long mId;
     private String mName;
     private String mArtist;
     private String mSongURL;
     private String mPhotoPath;
-    private boolean mIsPhotoFromURL;
 
     public Song(String name, String artist, String songURL, String photoPath) {
+        mId = System.nanoTime();
         this.mName = name;
         this.mArtist = artist;
         this.mSongURL = songURL;
         this.mPhotoPath = photoPath;
+    }
+
+    public long getId() {
+        return mId;
     }
 
     public String getName() {
@@ -48,14 +53,6 @@ public class Song implements Serializable {
 
     public void setPhotoPath(String photoPath) {
         this.mPhotoPath = photoPath;
-    }
-
-    public boolean isPhotoFromURL() {
-        return mIsPhotoFromURL;
-    }
-
-    public void setIsPhotoFromURL(boolean photoFromURL) {
-        mIsPhotoFromURL = photoFromURL;
     }
 
     @NonNull
