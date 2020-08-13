@@ -109,8 +109,10 @@ public class MainActivity extends AppCompatActivity {
         mPlayBtn = findViewById(R.id.play_btn);
         mNextBtn = findViewById(R.id.next_btn);
         mPrevBtn = findViewById(R.id.previous_btn);
-        Button controlBarSongPageBtn = findViewById(R.id.control_bar_song_page_btn);
 
+        mControlBarName.setSelected(true);
+
+        Button controlBarSongPageBtn = findViewById(R.id.control_bar_song_page_btn);
         controlBarSongPageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -234,9 +236,14 @@ public class MainActivity extends AppCompatActivity {
                                   @NonNull RecyclerView.ViewHolder target) {
                 final int from = viewHolder.getAdapterPosition();
                 final int to = target.getAdapterPosition();
+                final int currentSongPosition = MusicService.getCurrentSongPosition();
 
-                if (from == MusicService.getCurrentSongPosition()) {
+                if (from == currentSongPosition) {
                     MusicService.setCurrentSongPosition(to);
+                } else if (from < currentSongPosition && currentSongPosition <= to ) {
+                    MusicService.setCurrentSongPosition(currentSongPosition - 1);
+                } else if (to <= currentSongPosition && currentSongPosition < from) {
+                    MusicService.setCurrentSongPosition(currentSongPosition + 1);
                 }
 
                 mSongAdapter.notifyItemMoved(from, to);

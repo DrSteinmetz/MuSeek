@@ -17,7 +17,7 @@
         android:id="@+id/control_bar"
         android:layout_width="match_parent"
         android:layout_height="65dp"
-        android:background="@color/colorGrey"
+        android:background="@drawable/main_control_bar_shape"
         android:layout_alignParentBottom="true">
 
         <ImageView
