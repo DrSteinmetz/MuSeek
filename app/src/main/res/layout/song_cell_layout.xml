@@ -8,6 +8,7 @@
     android:elevation="10dp"
     app:cardCornerRadius="25dp"
     app:cardBackgroundColor="@color/colorPrimary"
+    android:layoutDirection="ltr"
     android:id="@+id/card_layout">
 
     <RelativeLayout

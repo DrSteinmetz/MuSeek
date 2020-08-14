@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
@@ -353,8 +354,11 @@ public class MusicService extends Service
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelID);
-        builder.setSmallIcon(R.drawable.ic_museek_notif_icon).setOnlyAlertOnce(true).
-                setPriority(Notification.PRIORITY_MAX).setContentTitle(getString(R.string.app_name));
+        builder.setPriority(Notification.PRIORITY_MAX).setContentTitle(getString(R.string.app_name))
+                .setSmallIcon(R.drawable.ic_museek_notif_icon)
+                .setOnlyAlertOnce(true)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_museek_icon));
 
         mRemoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
 

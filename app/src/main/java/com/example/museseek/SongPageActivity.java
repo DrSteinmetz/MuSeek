@@ -6,9 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -74,6 +76,12 @@ public class SongPageActivity extends AppCompatActivity {
         mNameTv = findViewById(R.id.details_name_tv);
         mArtistTv = findViewById(R.id.details_artist_tv);
 
+        final int ANIM_DURATION = 250;
+        final AlphaAnimation fadeOut = new AlphaAnimation(1, 0);
+        fadeOut.setDuration(ANIM_DURATION);
+        final AlphaAnimation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setDuration(ANIM_DURATION);
+
 
         /**<-------Initializing control bar------->**/
         mPlayBtn = findViewById(R.id.play_btn);
@@ -119,14 +127,27 @@ public class SongPageActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    int position = MusicService.getCurrentSongPosition();
+                    mNameTv.setAnimation(fadeOut);
+                    mArtistTv.setAnimation(fadeOut);
+                    mPhotoIv.setAnimation(fadeOut);
+                    fadeOut.start();
 
-                    Log.d(TAG, "ServiceNextOnClick" + position);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            int position = MusicService.getCurrentSongPosition();
 
-                    mName = mSongs.get(position).getName();
-                    mArtist = mSongs.get(position).getArtist();
-                    mPhotoPath = mSongs.get(position).getPhotoPath();
-                    initializeSongPage(mName, mArtist, mPhotoPath);
+                            mName = mSongs.get(position).getName();
+                            mArtist = mSongs.get(position).getArtist();
+                            mPhotoPath = mSongs.get(position).getPhotoPath();
+                            initializeSongPage(mName, mArtist, mPhotoPath);
+
+                            mNameTv.setAnimation(fadeIn);
+                            mArtistTv.setAnimation(fadeIn);
+                            mPhotoIv.setAnimation(fadeIn);
+                            fadeIn.start();
+                        }
+                    }, ANIM_DURATION);
                 }
             }
         });
@@ -146,14 +167,26 @@ public class SongPageActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mService.isInitialized()) {
-                    int position = MusicService.getCurrentSongPosition();
+                    mNameTv.setAnimation(fadeOut);
+                    mArtistTv.setAnimation(fadeOut);
+                    mPhotoIv.setAnimation(fadeOut);
+                    fadeOut.start();
 
-                    Log.d(TAG, "ServicePrevOnClick" + position);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            int position = MusicService.getCurrentSongPosition();
+                            mName = mSongs.get(position).getName();
+                            mArtist = mSongs.get(position).getArtist();
+                            mPhotoPath = mSongs.get(position).getPhotoPath();
+                            initializeSongPage(mName, mArtist, mPhotoPath);
 
-                    mName = mSongs.get(position).getName();
-                    mArtist = mSongs.get(position).getArtist();
-                    mPhotoPath = mSongs.get(position).getPhotoPath();
-                    initializeSongPage(mName, mArtist, mPhotoPath);
+                            mNameTv.setAnimation(fadeIn);
+                            mArtistTv.setAnimation(fadeIn);
+                            mPhotoIv.setAnimation(fadeIn);
+                            fadeIn.start();
+                        }
+                    }, ANIM_DURATION);
                 }
             }
         });
