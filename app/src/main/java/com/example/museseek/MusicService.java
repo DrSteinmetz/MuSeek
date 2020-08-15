@@ -9,6 +9,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -21,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -64,6 +67,7 @@ public class MusicService extends Service
     private ImageView mainControlBarImage;
     private TextView mainControlBarName;
     private TextView mainControlBarArtist;
+    private Button mainFinishBtn;
 
     private ImageButton pagePlayBtn;
     private Button pageNextBtn;
@@ -71,6 +75,7 @@ public class MusicService extends Service
     private SeekBar pageSeekBar;
     private TextView pageTimerStartTv;
     private TextView pageTimerEndTv;
+    private Button pageFinishBtn;
     private Handler mHandler = new Handler();
     private Runnable mRunnable;
 
@@ -116,14 +121,16 @@ public class MusicService extends Service
         String action = intent.getStringExtra("action");
 
         Log.d(TAG, "onStartCommand - Action: " + action);
-        Log.d(TAG, "onStartCommand - currentSong: " + mSongs.get(currentSongPosition));
 
         if (mMediaPlayer != null) {
             switch (action) {
                 case "initial":
+                    if (!handleInternetConnectivity()) {
+                        break;
+                    }
+
                     try {
                         if (!mIsInitialized) {
-                            Log.d(TAG, "onStartCommand: mSongs.size(): " + mSongs.size());
                             mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
                             mMediaPlayer.prepareAsync();
                             createNotification();
@@ -206,84 +213,56 @@ public class MusicService extends Service
     @Override
     public void onPrepared(MediaPlayer mp) {
         if (mMediaPlayer != null) {
-            Log.d(TAG, "onPrepared: Duration: " + mMediaPlayer.getDuration());
             mMediaPlayer.start();
             mIsPlaying = true;
 
             Song song = mSongs.get(currentSongPosition);
 
             /**<-------Performing notification changes------->**/
-            mRemoteViews.setImageViewResource(R.id.notif_play_btn,
-                    R.drawable.ic_round_pause_grey_24);
-            mRemoteViews.setTextViewText(R.id.notif_song_name_tv,
-                    song.getName());
-            mRemoteViews.setTextViewText(R.id.notif_song_artist_tv,
-                    song.getArtist());
-            NotificationTarget notificationTarget = new NotificationTarget(
-                    MusicService.this,
-                    R.id.notif_song_image,
-                    mRemoteViews,
-                    mNotification,
-                    NOTIFICATION_ID
-            );
-
-            RequestOptions options = new RequestOptions()
-                    .circleCrop()
-                    .placeholder(R.drawable.ic_default_song_pic)
-                    .error(R.drawable.ic_default_song_pic);
-
-            Glide.with(MusicService.this)
-                    .asBitmap()
-                    .load(song.getPhotoPath() == null ? R.drawable.ic_default_song_pic : song.getPhotoPath())
-                    .apply(options)
-                    .into(notificationTarget);
-
-            mNotificationManager.notify(NOTIFICATION_ID, mNotification);
-
+            prepareNotification(song);
 
             /**<-------Performing UI changes------->**/
-            if (mainControlBarImage != null) {
-                Glide.with(MusicService.this)
-                        .asBitmap()
-                        .load(song.getPhotoPath())
-                        .apply(options)
-                        .into(mainControlBarImage);
-            }
-            if (mainControlBarName != null) {
-                mainControlBarName.setText(song.getName());
-                mainControlBarName.setSelected(true);
-            }
-            if (mainControlBarArtist != null) {
-                mainControlBarArtist.setVisibility(View.VISIBLE);
-                mainControlBarArtist.setText(song.getArtist());
-                mainControlBarArtist.setSelected(true);
-            }
+            prepareMainControlBar(song);
 
             if (pagePlayBtn != null) {
                 pagePlayBtn.setImageDrawable(getDrawable(
                         R.drawable.ic_round_pause_white_100));
             }
+
             songAdapter.notifyDataSetChanged();
+
             initializeSeekBar();
         }
     }
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        Log.d(TAG, "onError: " + what);
+        if (!handleInternetConnectivity()) {
+            return true;
+        }
+
         if (mMediaPlayer != null) {
+            /**<-------if there's a problem during the song, move to the next song------->**/
+            if (mMediaPlayer.getCurrentPosition() > 1000) {
+                return false;
+            }
+
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.stop();
             }
             mMediaPlayer.reset();
+
             try {
                 mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
                 mMediaPlayer.prepare();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     private void moveSong(boolean isNext) {
@@ -303,6 +282,7 @@ public class MusicService extends Service
             mMediaPlayer.stop();
         }
         mMediaPlayer.reset();
+
         try {
             mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
             mMediaPlayer.prepareAsync();
@@ -315,24 +295,27 @@ public class MusicService extends Service
 
     private boolean play() {
         mIsPlaying = false;
+
         if (mMediaPlayer != null) {
-            if (mMediaPlayer.isPlaying()) {
-                mIsPlaying = true;
+            if (!mMediaPlayer.isPlaying()) {
+                mMediaPlayer.start();
             }
-            mMediaPlayer.start();
             mIsPlaying = true;
         }
+
         return mIsPlaying;
     }
 
     private boolean pause() {
         mIsPlaying = true;
+
         if (mMediaPlayer != null) {
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();
-                mIsPlaying = false;
             }
+            mIsPlaying = false;
         }
+
         return !mIsPlaying;
     }
 
@@ -437,29 +420,57 @@ public class MusicService extends Service
         }
     }
 
-    private String milliSecondsToTimer(long milliseconds) {
-        String finalTimerString = "";
-        String secondsString = "";
-        String minutesString = "";
+    private void prepareNotification(Song song) {
+        mRemoteViews.setImageViewResource(R.id.notif_play_btn,
+                R.drawable.ic_round_pause_grey_24);
+        mRemoteViews.setTextViewText(R.id.notif_song_name_tv,
+                song.getName());
+        mRemoteViews.setTextViewText(R.id.notif_song_artist_tv,
+                song.getArtist());
+        NotificationTarget notificationTarget = new NotificationTarget(
+                MusicService.this,
+                R.id.notif_song_image,
+                mRemoteViews,
+                mNotification,
+                NOTIFICATION_ID
+        );
 
-        /**<-------Convert total duration into time------->**/
-        int hours = (int) (milliseconds / (1000 * 60 * 60));
-        int minutes = (int) (milliseconds % (1000 * 60 * 60)) / (1000 * 60);
-        int seconds = (int) ((milliseconds % (1000 * 60 * 60)) % (1000 * 60) / 1000);
-        /**<-------Add hours if there------->**/
-        if (hours > 0) {
-            finalTimerString = hours + ":";
+        RequestOptions options = new RequestOptions()
+                .circleCrop()
+                .placeholder(R.drawable.ic_default_song_pic)
+                .error(R.drawable.ic_default_song_pic);
+
+        Glide.with(MusicService.this)
+                .asBitmap()
+                .load(song.getPhotoPath() == null ? R.drawable.ic_default_song_pic : song.getPhotoPath())
+                .apply(options)
+                .into(notificationTarget);
+
+        mNotificationManager.notify(NOTIFICATION_ID, mNotification);
+    }
+
+    private void prepareMainControlBar(Song song) {
+        if (mainControlBarImage != null) {
+            RequestOptions options = new RequestOptions()
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_default_song_pic)
+                    .error(R.drawable.ic_default_song_pic);
+
+            Glide.with(MusicService.this)
+                    .asBitmap()
+                    .load(song.getPhotoPath())
+                    .apply(options)
+                    .into(mainControlBarImage);
         }
-
-        /**<-------Prepending 0 to seconds if it is one digit------->**/
-        secondsString = (seconds < 10 ? "0" + seconds : "" + seconds);
-        /**<-------Prepending 0 to minutes if it is one digit------->**/
-        minutesString = (minutes < 10 ? "0" + minutes : "" + minutes);
-
-        finalTimerString = finalTimerString + minutesString + ":" + secondsString;
-
-        /**<-------Return timer string------->**/
-        return finalTimerString;
+        if (mainControlBarName != null) {
+            mainControlBarName.setText(song.getName());
+            mainControlBarName.setSelected(true);
+        }
+        if (mainControlBarArtist != null) {
+            mainControlBarArtist.setVisibility(View.VISIBLE);
+            mainControlBarArtist.setText(song.getArtist());
+            mainControlBarArtist.setSelected(true);
+        }
     }
 
     private void moveToNextSong() {
@@ -500,6 +511,77 @@ public class MusicService extends Service
         }
     }
 
+    private String milliSecondsToTimer(long milliseconds) {
+        String finalTimerString = "";
+        String secondsString = "";
+        String minutesString = "";
+
+        /**<-------Convert total duration into time------->**/
+        int hours = (int) (milliseconds / (1000 * 60 * 60));
+        int minutes = (int) (milliseconds % (1000 * 60 * 60)) / (1000 * 60);
+        int seconds = (int) ((milliseconds % (1000 * 60 * 60)) % (1000 * 60) / 1000);
+        /**<-------Add hours if there------->**/
+        if (hours > 0) {
+            finalTimerString = hours + ":";
+        }
+
+        /**<-------Prepending 0 to seconds if it is one digit------->**/
+        secondsString = (seconds < 10 ? "0" + seconds : "" + seconds);
+        /**<-------Prepending 0 to minutes if it is one digit------->**/
+        minutesString = (minutes < 10 ? "0" + minutes : "" + minutes);
+
+        finalTimerString = finalTimerString + minutesString + ":" + secondsString;
+
+        /**<-------Return timer string------->**/
+        return finalTimerString;
+    }
+
+    private boolean isInternetAvailable(){
+        boolean have_WIFI= false;
+        boolean have_MobileData = false;
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo[] networkInfos = connectivityManager.getAllNetworkInfo();
+
+        for(NetworkInfo info : networkInfos) {
+            if (info.getTypeName().equalsIgnoreCase("WIFI")) {
+                if (info.isConnected()) {
+                    have_WIFI = true;
+                }
+            }
+
+            if (info.getTypeName().equalsIgnoreCase("MOBILE DATA")) {
+                if (info.isConnected()) {
+                    have_MobileData = true;
+                }
+            }
+        }
+        return have_WIFI || have_MobileData;
+    }
+
+    private boolean handleInternetConnectivity() {
+        boolean connectivity = true;
+
+        if (!isInternetAvailable()) {
+            Toast.makeText(this, R.string.no_internet_msg, Toast.LENGTH_SHORT).show();
+            if (mIsInitialized) {
+                stopForeground(true);
+                stopSelf();
+                mNotificationManager.cancel(NOTIFICATION_ID);
+            }
+
+            if (mainFinishBtn != null) {
+                mainFinishBtn.performClick();
+            }
+            if (pageFinishBtn != null) {
+                pageFinishBtn.performClick();
+            }
+            connectivity = false;
+        }
+
+        return connectivity;
+    }
+
 
     public static int getCurrentSongPosition() {
         return currentSongPosition;
@@ -522,10 +604,6 @@ public class MusicService extends Service
         return false;
     }
 
-    public void setMainPlayBtn(ImageButton mainPlayBtn) {
-        this.mainPlayBtn = mainPlayBtn;
-    }
-
     public boolean isShuffle() {
         return mIsShuffle;
     }
@@ -542,6 +620,22 @@ public class MusicService extends Service
         this.mIsRepeat = isRepeat;
     }
 
+    public void setSongList(List<Song> songList) {
+        this.mSongs = songList;
+    }
+
+    public List<Song> getSongList() {
+        return mSongs;
+    }
+
+    public void setSongAdapter(SongAdapter songAdapter) {
+        this.songAdapter = songAdapter;
+    }
+
+    public void setMainPlayBtn(ImageButton mainPlayBtn) {
+        this.mainPlayBtn = mainPlayBtn;
+    }
+
     public void setMainControlBarImage(ImageView mainControlBarImage) {
         this.mainControlBarImage = mainControlBarImage;
     }
@@ -552,6 +646,10 @@ public class MusicService extends Service
 
     public void setMainControlBarArtist(TextView mainControlBarArtist) {
         this.mainControlBarArtist = mainControlBarArtist;
+    }
+
+    public void setMainFinishBtn(Button mainFinishBtn) {
+        this.mainFinishBtn = mainFinishBtn;
     }
 
     public void setPagePlayBtn(ImageButton pagePlayBtn) {
@@ -578,22 +676,9 @@ public class MusicService extends Service
         this.pageTimerEndTv = pageTimerEndTv;
     }
 
-    public List<Song> getSongList() {
-        return mSongs;
+    public void setPageFinishBtn(Button pageFinishBtn) {
+        this.pageFinishBtn = pageFinishBtn;
     }
-
-    public void setSongList(List<Song> songList) {
-        this.mSongs = songList;
-    }
-
-    public SongAdapter getSongAdapter() {
-        return songAdapter;
-    }
-
-    public void setSongAdapter(SongAdapter songAdapter) {
-        this.songAdapter = songAdapter;
-    }
-
 
     @Override
     public void onDestroy() {

@@ -43,6 +43,7 @@ public class SongPageActivity extends AppCompatActivity {
     private ImageButton mPlayBtn;
     private Button mServiceNextBtn;
     private Button mServicePrevBtn;
+    private Button mFinishBtn;
     private ImageButton mShuffleBtn;
     private ImageButton mRepeatBtn;
 
@@ -94,6 +95,8 @@ public class SongPageActivity extends AppCompatActivity {
 
         mShuffleBtn = findViewById(R.id.shuffle_btn);
         mRepeatBtn = findViewById(R.id.repeat_btn);
+
+        mFinishBtn = findViewById(R.id.finish_btn);
 
 
         mPlayBtn.setOnClickListener(new View.OnClickListener() {
@@ -220,6 +223,13 @@ public class SongPageActivity extends AppCompatActivity {
                 }
             }
         });
+
+        mFinishBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     /**<-------Initializing MusicService connection methods------->**/
@@ -228,15 +238,9 @@ public class SongPageActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             mService = ((MusicService.ServiceBinder) service).getService();
 
-            /**<-------Setting the play/pause button according to the Music service------->**/
-            Log.d(TAG, "onServiceConnected: Service activated");
             mSongs = mService.getSongList();
-            mService.setPagePlayBtn(mPlayBtn);
-            mService.setPageNextBtn(mServiceNextBtn);
-            mService.setPagePrevBtn(mServicePrevBtn);
-            mService.setPageSeekBar(mSongSeekBar);
-            mService.setPageTimerStartTv(mSongTimerStart);
-            mService.setPageTimerEndTv(mSongTimerEnd);
+
+            initializeService();
 
             initializeSongPage(mName, mArtist, mPhotoPath);
 
@@ -299,9 +303,15 @@ public class SongPageActivity extends AppCompatActivity {
     }
 
     private void initializeService() {
-        /**<-------Passing on an instance of the play button so the
-         *           service will be able to change the button too------->**/
+        /**<-------Passing on an instance of the buttons so the
+         *      service will be able to change the buttons as well------->**/
         mService.setPagePlayBtn(mPlayBtn);
+        mService.setPageNextBtn(mServiceNextBtn);
+        mService.setPagePrevBtn(mServicePrevBtn);
+        mService.setPageSeekBar(mSongSeekBar);
+        mService.setPageTimerStartTv(mSongTimerStart);
+        mService.setPageTimerEndTv(mSongTimerEnd);
+        mService.setPageFinishBtn(mFinishBtn);
         /**<-------Initializing song list------->**/
         mService.setSongList(mSongs);
     }
@@ -342,6 +352,7 @@ public class SongPageActivity extends AppCompatActivity {
             mService.setPageSeekBar(null);
             mService.setPageTimerStartTv(null);
             mService.setPageTimerEndTv(null);
+            mService.setPageFinishBtn(null);
         }
 
         doUnbindService();

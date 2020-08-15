@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mControlBarImage;
     private TextView mControlBarName;
     private TextView mControlBarArtist;
+    private Button mFinishBtn;
 
     private final String SONG_PATH = "songs";
 
@@ -109,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
         mPlayBtn = findViewById(R.id.play_btn);
         mNextBtn = findViewById(R.id.next_btn);
         mPrevBtn = findViewById(R.id.previous_btn);
+        mFinishBtn = findViewById(R.id.finish_btn);
 
         mControlBarName.setSelected(true);
 
@@ -179,6 +181,13 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra("action", "previous");
                     startService(intent);
                 }
+            }
+        });
+
+        mFinishBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finishAffinity();
             }
         });
 
@@ -413,12 +422,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeService() {
-        /**<-------Passing on an instance of the play button so the
-         *           service will be able to change the button too------->**/
+        /**<-------Passing on an instance of the buttons so the
+         *     service will be able to change the buttons as well------->**/
         mService.setMainPlayBtn(mPlayBtn);
         mService.setMainControlBarImage(mControlBarImage);
         mService.setMainControlBarName(mControlBarName);
         mService.setMainControlBarArtist(mControlBarArtist);
+        mService.setMainFinishBtn(mFinishBtn);
         /**<-------Initializing song list------->**/
         mService.setSongList(mSongs);
         /**<-------Passing on an instance of the song adapter so the
@@ -658,6 +668,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+
+        if (mService != null) {
+            mService.setMainPlayBtn(null);
+            mService.setMainControlBarImage(null);
+            mService.setMainControlBarName(null);
+            mService.setMainControlBarArtist(null);
+            mService.setMainFinishBtn(null);
+        }
 
         doUnbindService();
     }

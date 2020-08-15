@@ -12,11 +12,13 @@
     <string name="dlg_add_song_artist_et">שם האומן</string>
     <string name="dlg_add_song_url_et">קישור לשיר</string>
     <string name="dlg_add_image_tv">הוספת תמונה לשיר</string>
-    <string name="dlg_add_gallery_pic">בחר\י תמונה</string>
+    <string name="dlg_add_gallery_pic">נא לבחור תמונה</string>
     <string name="dlg_add_error">עליך להזין את שם השיר, שם האומן, וקישור לשיר!</string>
     <string name="dlg_add_bad_url">הקישור אינו תקין!</string>
 
-    <string name="dlg_dlt_title">אנא אשר\י כי ברצונך למחוק שיר זה</string>
+    <string name="dlg_dlt_title">נא לאשר כי ברצונך למחוק שיר זה</string>
     <string name="dlg_dlt_undo_tv">השיר נמחק</string>
     <string name="dlg_dlt_undo_btn">ביטול</string>
+
+    <string name="no_internet_msg">לא עובד ללא אינטרנט!</string>
 </resources>
