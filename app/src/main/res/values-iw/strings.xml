@@ -16,6 +16,8 @@
     <string name="dlg_add_error">עליך להזין את שם השיר, שם האומן, וקישור לשיר!</string>
     <string name="dlg_add_bad_url">הקישור אינו תקין!</string>
 
+    <string name="dlg_edit_title_tv">עריכת שיר</string>
+
     <string name="dlg_dlt_title">נא לאשר כי ברצונך למחוק שיר זה</string>
     <string name="dlg_dlt_undo_tv">השיר נמחק</string>
     <string name="dlg_dlt_undo_btn">ביטול</string>

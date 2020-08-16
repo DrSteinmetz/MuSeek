@@ -1,6 +1,7 @@
 package com.example.museseek;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +16,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -72,14 +74,16 @@ public class MainActivity extends AppCompatActivity {
     private TextView mControlBarArtist;
     private Button mFinishBtn;
 
-    private final String SONG_PATH = "songs";
+    private RelativeLayout dlgPicturesLayout;
+    private ImageView mDlgSelectedImageIv;
 
     private boolean mIsDarkMode;
+
+    private final String SONG_PATH = "songs";
 
     private final int CAMERA_REQUEST = 1;
     private final int GALLERY_REQUEST = 2;
     private final int WRITE_PERMISSION_REQUEST = 7;
-    private RelativeLayout dlgPicturesLayout;
 
     private final String TAG = "MainActivity";
 
@@ -269,8 +273,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSwiped(@NonNull final RecyclerView.ViewHolder viewHolder, int direction) {
                 if (direction == ItemTouchHelper.RIGHT) {
-                    //TODO: Action on right swipe OR delete of there's no action
-                    mSongAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
+                    showEditSongDialog(viewHolder.getAdapterPosition());
                 } else if (direction == ItemTouchHelper.LEFT) {
                     showSongDeletionDialog(viewHolder.getAdapterPosition());
                 }
@@ -373,7 +376,9 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
             mSelectedImage = Uri.parse(mFile.getAbsolutePath());
         } else if (requestCode == GALLERY_REQUEST && resultCode == RESULT_OK) {
-            mSelectedImage = data.getData();
+            if (data != null) {
+                mSelectedImage = data.getData();
+            }
         }
     }
 
@@ -560,6 +565,9 @@ public class MainActivity extends AppCompatActivity {
         builder.setView(view);
         builder.setCancelable(false);
 
+        final TextView title_tv = view.findViewById(R.id.title_tv);
+        title_tv.setText(R.string.dlg_add_title_tv);
+
         final EditText name_et = view.findViewById(R.id.song_name_et);
         final EditText artist_et = view.findViewById(R.id.song_artist_et);
         final EditText url_et = view.findViewById(R.id.song_url_et);
@@ -567,6 +575,9 @@ public class MainActivity extends AppCompatActivity {
         final ImageButton btn_camera = view.findViewById(R.id.btn_camera);
         final ImageButton btn_cancel = view.findViewById(R.id.btn_cancel);
         final ImageButton btn_confirm = view.findViewById(R.id.btn_confirm);
+        mDlgSelectedImageIv = view.findViewById(R.id.selected_image_iv);
+        mDlgSelectedImageIv.setClipToOutline(true);
+        mDlgSelectedImageIv.setVisibility(View.GONE);
         dlgPicturesLayout = view.findViewById(R.id.take_pic_layout);
 
         /**<-------Requesting user permissions------->**/
@@ -594,7 +605,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mFile = new File(Environment.getExternalStorageDirectory(),
-                        "song" + System.nanoTime() + "pic.jpg");
+                        "museek" + System.nanoTime() + "pic.jpg");
                 mSelectedImage = FileProvider.getUriForFile(MainActivity.this,
                         "com.example.museseek.provider", mFile);
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -630,6 +641,124 @@ public class MainActivity extends AppCompatActivity {
 
                         mSongs.add(song);
                         mSongAdapter.notifyItemInserted(mSongs.size() - 1);
+                        if (mService != null) {
+                            mService.setSongList(mSongs);
+                        }
+
+                        mSelectedImage = null;
+                        alertDialog.dismiss();
+                    } else {
+                        Toast.makeText(MainActivity.this, R.string.dlg_add_bad_url, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+        }
+
+        alertDialog.show();
+    }
+
+    void showEditSongDialog(final int songPosition) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogTheme);
+        View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_add_song,
+                (RelativeLayout) findViewById(R.id.layoutDialogContainer));
+
+        builder.setView(view);
+        builder.setCancelable(false);
+
+        final TextView title_tv = view.findViewById(R.id.title_tv);
+        title_tv.setText(R.string.dlg_edit_title_tv);
+
+        final EditText name_et = view.findViewById(R.id.song_name_et);
+        final EditText artist_et = view.findViewById(R.id.song_artist_et);
+        final EditText url_et = view.findViewById(R.id.song_url_et);
+        final ImageButton btn_gallery = view.findViewById(R.id.btn_gallery);
+        final ImageButton btn_camera = view.findViewById(R.id.btn_camera);
+        final ImageButton btn_cancel = view.findViewById(R.id.btn_cancel);
+        final ImageButton btn_confirm = view.findViewById(R.id.btn_confirm);
+        mDlgSelectedImageIv = view.findViewById(R.id.selected_image_iv);
+        mDlgSelectedImageIv.setClipToOutline(true);
+        mDlgSelectedImageIv.setVisibility(View.VISIBLE);
+        dlgPicturesLayout = view.findViewById(R.id.take_pic_layout);
+
+        /**<-------Requesting user permissions------->**/
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int hasWritePermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            if (hasWritePermission != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        WRITE_PERMISSION_REQUEST);
+            }
+        }
+
+        final Song song = mSongs.get(songPosition);
+        name_et.setText(song.getName());
+        artist_et.setText(song.getArtist());
+        url_et.setText(song.getSongURL());
+        Glide.with(this)
+                .load(song.getPhotoPath())
+                .error(R.drawable.ic_default_song_pic)
+                .into(mDlgSelectedImageIv);
+
+        final AlertDialog alertDialog = builder.create();
+
+        btn_gallery.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(Intent.createChooser(intent,
+                        getResources().getString(R.string.dlg_add_gallery_pic)), GALLERY_REQUEST);
+            }
+        });
+
+        btn_camera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mFile = new File(Environment.getExternalStorageDirectory(),
+                        "museek" + System.nanoTime() + "pic.jpg");
+                mSelectedImage = FileProvider.getUriForFile(MainActivity.this,
+                        "com.example.museseek.provider", mFile);
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, mSelectedImage);
+                startActivityForResult(intent, CAMERA_REQUEST);
+            }
+        });
+
+        btn_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mSongAdapter.notifyItemChanged(songPosition);
+                alertDialog.dismiss();
+            }
+        });
+
+        btn_confirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**<-------Add a song to the list------->*/
+                String songName = name_et.getText().toString();
+                String songArtist = artist_et.getText().toString();
+                String songURL = url_et.getText().toString();
+                String photoUri = mSelectedImage != null
+                        ? mSelectedImage.toString()
+                        : song.getPhotoPath();
+
+                /**<-------Checks if the user entered all the details------->*/
+                if (songName.trim().length() < 1 || songArtist.trim().length() < 1
+                        || songURL.trim().length() < 1) {
+                    Toast.makeText(MainActivity.this, R.string.dlg_add_error, Toast.LENGTH_SHORT).show();
+                } else {
+                    /**<-------Checks if the user entered a valid URL------->*/
+                    if (Patterns.WEB_URL.matcher(songURL).matches()) {
+                        song.setName(songName);
+                        song.setArtist(songArtist);
+                        song.setSongURL(songURL);
+                        song.setPhotoPath(photoUri);
+
+                        mSongAdapter.notifyItemChanged(songPosition);
                         if (mService != null) {
                             mService.setSongList(mSongs);
                         }

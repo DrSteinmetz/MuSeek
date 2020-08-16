@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -282,6 +283,10 @@ public class MusicService extends Service
             mMediaPlayer.stop();
         }
         mMediaPlayer.reset();
+
+        /*if (!Patterns.WEB_URL.matcher(mSongs.get(currentSongPosition).getSongURL()).matches()) {
+            //TODO: showSuggestDeletingInvalidSongDialog.preformClick();
+        }*/
 
         try {
             mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
