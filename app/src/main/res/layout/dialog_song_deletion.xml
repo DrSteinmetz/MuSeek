@@ -14,14 +14,22 @@
         android:background="@drawable/dialog_background"
         android:layout_centerHorizontal="true">
 
+        <ImageView
+            android:id="@+id/warning_sign_iv"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_round_warning_white_100"/>
+
         <TextView
             android:id="@+id/title_tv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_below="@id/warning_sign_iv"
             android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="35dp"
-            android:padding="10dp"
+            android:layout_marginBottom="45dp"
+            android:paddingHorizontal="10dp"
             android:gravity="center"
             android:layout_centerHorizontal="true"
             android:text="@string/dlg_dlt_title"

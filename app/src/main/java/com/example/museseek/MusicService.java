@@ -16,7 +16,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -59,7 +58,8 @@ public class MusicService extends Service
 
     private boolean mIsShuffle = false;
     private boolean mIsRepeat = false;
-    /*private ArrayList<Long> SongsForShuffle = new ArrayList<>();*/
+    private ArrayList<Song> mSongsForShuffle = new ArrayList<>();
+    private ArrayList<Song> mSongsHistory = new ArrayList<>();
 
 
     private SongAdapter songAdapter;
@@ -207,7 +207,6 @@ public class MusicService extends Service
     @Override
     public void onCompletion(MediaPlayer mp) {
         moveSong(true);
-        Log.d(TAG, "onCompletion");
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
@@ -268,14 +267,14 @@ public class MusicService extends Service
 
     private void moveSong(boolean isNext) {
         if (!mIsRepeat) {
-            if (mIsShuffle) {
-                shuffle();
-            } else {
-                if (isNext) {
-                    moveToNextSong();
+            if (isNext) {
+                if (mIsShuffle) {
+                    shuffle();
                 } else {
-                    moveToPreviousSong();
+                    moveToNextSong();
                 }
+            } else {
+                moveToPreviousSong();
             }
         }
 
@@ -283,10 +282,6 @@ public class MusicService extends Service
             mMediaPlayer.stop();
         }
         mMediaPlayer.reset();
-
-        /*if (!Patterns.WEB_URL.matcher(mSongs.get(currentSongPosition).getSongURL()).matches()) {
-            //TODO: showSuggestDeletingInvalidSongDialog.preformClick();
-        }*/
 
         try {
             mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
@@ -393,8 +388,6 @@ public class MusicService extends Service
         }
 
         if (pageSeekBar != null) {
-            Log.d(TAG, "initializeSeekBar");
-
             pageSeekBar.setMax(mMediaPlayer.getDuration());
             pageTimerEndTv.setText(milliSecondsToTimer(mMediaPlayer.getDuration()));
             mRunnable.run();
@@ -491,10 +484,17 @@ public class MusicService extends Service
     }
 
     private void moveToPreviousSong() {
-        if (currentSongPosition <= 0) {
-            currentSongPosition = mSongs.size() - 1;
+        if (mIsShuffle && !mSongsHistory.isEmpty()) {
+            /**<-------Finds the previous song that was playing and plays it------->**/
+            Song prevSong = mSongsHistory.remove(mSongsHistory.size() - 1);
+            currentSongPosition = mSongs.indexOf(prevSong);
         } else {
-            currentSongPosition--;
+            if (currentSongPosition <= 0) {
+                currentSongPosition = mSongs.size() - 1;
+            } else {
+                currentSongPosition--;
+            }
+
         }
 
         if (pagePrevBtn != null) {
@@ -506,10 +506,17 @@ public class MusicService extends Service
         Random random = new Random();
         int prevSong = currentSongPosition;
 
-        currentSongPosition = random.nextInt(mSongs.size());
-        while (currentSongPosition == prevSong) {
-            currentSongPosition = random.nextInt(mSongs.size());
+        mSongsHistory.add(mSongs.get(prevSong));
+
+        if (mSongsForShuffle.size() >= mSongs.size() - 1) {
+            mSongsForShuffle.clear();
         }
+        mSongsForShuffle.add(mSongs.get(prevSong));
+
+        /**<-------Play a random song that wasn't playing yet------->**/
+        do {
+            currentSongPosition = random.nextInt(mSongs.size());
+        } while (mSongsForShuffle.contains(mSongs.get(currentSongPosition)));
 
         if (pageNextBtn != null) {
             pageNextBtn.performClick();
@@ -567,6 +574,7 @@ public class MusicService extends Service
     private boolean handleInternetConnectivity() {
         boolean connectivity = true;
 
+        /**<-------If there's no internet let the user know and kill the app------->**/
         if (!isInternetAvailable()) {
             Toast.makeText(this, R.string.no_internet_msg, Toast.LENGTH_SHORT).show();
             if (mIsInitialized) {

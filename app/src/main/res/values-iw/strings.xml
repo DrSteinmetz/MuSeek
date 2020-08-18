@@ -22,5 +22,5 @@
     <string name="dlg_dlt_undo_tv">השיר נמחק</string>
     <string name="dlg_dlt_undo_btn">ביטול</string>
 
-    <string name="no_internet_msg">לא עובד ללא אינטרנט!</string>
+    <string name="no_internet_msg">לא עובד ללא אינטרנט!\n ביי ביי!</string>
 </resources>

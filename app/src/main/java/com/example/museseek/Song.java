@@ -3,6 +3,7 @@ package com.example.museseek;
 import androidx.annotation.NonNull;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Song implements Serializable {
     private long mId;
@@ -60,5 +61,19 @@ public class Song implements Serializable {
     public String toString() {
         return "Name: " + mName +
                 "\nArtist: " + mArtist;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        Song song = (Song) obj;
+        return (mId == song.getId());
     }
 }

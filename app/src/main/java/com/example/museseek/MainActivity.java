@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
         mPlayBtn = findViewById(R.id.play_btn);
         mNextBtn = findViewById(R.id.next_btn);
         mPrevBtn = findViewById(R.id.previous_btn);
+
         mFinishBtn = findViewById(R.id.finish_btn);
 
         mControlBarName.setSelected(true);
@@ -286,7 +287,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mSongAdapter);
     }
 
-    /**<-------Initializing MusicService connection methods------->**/
+    /**<-------Sets MusicService connection methods------->**/
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -331,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /**<-------Initializing Menu------->**/
+    /**<-------Sets Menu------->**/
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.options_menu, menu);
@@ -373,15 +374,34 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
-            mSelectedImage = Uri.parse(mFile.getAbsolutePath());
-        } else if (requestCode == GALLERY_REQUEST && resultCode == RESULT_OK) {
-            if (data != null) {
-                mSelectedImage = data.getData();
+        if (resultCode == RESULT_OK) {
+            if (requestCode == CAMERA_REQUEST) {
+                if (mDlgSelectedImageIv != null) {
+                    Glide.with(MainActivity.this)
+                            .load(mSelectedImage)
+                            .error(R.drawable.ic_default_song_pic)
+                            .into(mDlgSelectedImageIv);
+
+                    mDlgSelectedImageIv.setVisibility(View.VISIBLE);
+                }
+            } else if (requestCode == GALLERY_REQUEST) {
+                if (data != null) {
+                    mSelectedImage = data.getData();
+
+                    if (mDlgSelectedImageIv != null) {
+                        Glide.with(MainActivity.this)
+                                .load(mSelectedImage)
+                                .error(R.drawable.ic_default_song_pic)
+                                .into(mDlgSelectedImageIv);
+
+                        mDlgSelectedImageIv.setVisibility(View.VISIBLE);
+                    }
+                }
             }
         }
     }
 
+    /**<-------Initialization methods------->*/
     public void checkIfFirstUseOfApp() {
         if (mSharedPreferences.getBoolean("is_first_use", true)) {
             /**<-------If it's the first time the user opens the app,
@@ -461,6 +481,7 @@ public class MainActivity extends AppCompatActivity {
         mControlBarArtist.setSelected(true);
     }
 
+    /**<-------File handling methods------->*/
     private void readSongsFromFile() {
         try {
             FileInputStream fileInputStream = openFileInput(SONG_PATH);
@@ -485,6 +506,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**<-------Dialogs------->*/
     void showSongDeletionDialog(final int songPosition) {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogTheme);
         View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_song_deletion,
@@ -778,6 +800,7 @@ public class MainActivity extends AppCompatActivity {
 
         alertDialog.show();
     }
+
 
     @Override
     protected void onStart() {
