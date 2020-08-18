@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mControlBarImage;
     private TextView mControlBarName;
     private TextView mControlBarArtist;
+    private ImageView mNoSongsAvailableIv;
     private Button mFinishBtn;
 
     private RelativeLayout dlgPicturesLayout;
@@ -115,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         mNextBtn = findViewById(R.id.next_btn);
         mPrevBtn = findViewById(R.id.previous_btn);
 
+        mNoSongsAvailableIv = findViewById(R.id.no_songs_iv);
         mFinishBtn = findViewById(R.id.finish_btn);
 
         mControlBarName.setSelected(true);
@@ -123,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
         controlBarSongPageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mService.isInitialized()) {
+                if (mService.isInitialized() && !mSongs.isEmpty()) {
                     int position = MusicService.getCurrentSongPosition();
                     Intent intent = new Intent(MainActivity.this, SongPageActivity.class);
                     intent.putExtra("photo_path", mSongs.get(position).getPhotoPath());
@@ -453,6 +455,7 @@ public class MainActivity extends AppCompatActivity {
         mService.setMainControlBarImage(mControlBarImage);
         mService.setMainControlBarName(mControlBarName);
         mService.setMainControlBarArtist(mControlBarArtist);
+        mService.setNoSongsAvailableIv(mNoSongsAvailableIv);
         mService.setMainFinishBtn(mFinishBtn);
         /**<-------Initializing song list------->**/
         mService.setSongList(mSongs);
@@ -826,6 +829,7 @@ public class MainActivity extends AppCompatActivity {
             mService.setMainControlBarImage(null);
             mService.setMainControlBarName(null);
             mService.setMainControlBarArtist(null);
+            mService.setNoSongsAvailableIv(null);
             mService.setMainFinishBtn(null);
         }
 

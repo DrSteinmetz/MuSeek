@@ -68,6 +68,7 @@ public class MusicService extends Service
     private ImageView mainControlBarImage;
     private TextView mainControlBarName;
     private TextView mainControlBarArtist;
+    private ImageView noSongsAvailableIv;
     private Button mainFinishBtn;
 
     private ImageButton pagePlayBtn;
@@ -123,7 +124,7 @@ public class MusicService extends Service
 
         Log.d(TAG, "onStartCommand - Action: " + action);
 
-        if (mMediaPlayer != null) {
+        if (mMediaPlayer != null && !mSongs.isEmpty()) {
             switch (action) {
                 case "initial":
                     if (!handleInternetConnectivity()) {
@@ -199,6 +200,10 @@ public class MusicService extends Service
                     stopSelf();
                     mNotificationManager.cancel(NOTIFICATION_ID);
             }
+        } else if (mSongs.isEmpty()){
+            if (noSongsAvailableIv != null) {
+                noSongsAvailableIv.setVisibility(View.VISIBLE);
+            }
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -266,31 +271,43 @@ public class MusicService extends Service
     }
 
     private void moveSong(boolean isNext) {
-        if (!mIsRepeat) {
-            if (isNext) {
-                if (mIsShuffle) {
-                    shuffle();
+        if (!mSongs.isEmpty()) {
+            if (!mIsRepeat) {
+                if (isNext) {
+                    if (mIsShuffle) {
+                        shuffle();
+                    } else {
+                        moveToNextSong();
+                    }
                 } else {
-                    moveToNextSong();
+                    moveToPreviousSong();
                 }
-            } else {
-                moveToPreviousSong();
             }
-        }
 
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.stop();
-        }
-        mMediaPlayer.reset();
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.stop();
+            }
+            mMediaPlayer.reset();
 
-        try {
-            mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
-            mMediaPlayer.prepareAsync();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            try {
+                mMediaPlayer.setDataSource(mSongs.get(currentSongPosition).getSongURL());
+                mMediaPlayer.prepareAsync();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-        mIsPlaying = true;
+            mIsPlaying = true;
+        } else {
+            if (noSongsAvailableIv != null) {
+                noSongsAvailableIv.setVisibility(View.VISIBLE);
+            }
+
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.stop();
+            }
+            mMediaPlayer.reset();
+            mIsPlaying = false;
+        }
     }
 
     private boolean play() {
@@ -488,6 +505,10 @@ public class MusicService extends Service
             /**<-------Finds the previous song that was playing and plays it------->**/
             Song prevSong = mSongsHistory.remove(mSongsHistory.size() - 1);
             currentSongPosition = mSongs.indexOf(prevSong);
+
+            if (currentSongPosition < 0) {
+                moveToPreviousSong();
+            }
         } else {
             if (currentSongPosition <= 0) {
                 currentSongPosition = mSongs.size() - 1;
@@ -635,6 +656,16 @@ public class MusicService extends Service
 
     public void setSongList(List<Song> songList) {
         this.mSongs = songList;
+
+        if (songList.isEmpty()) {
+            if (noSongsAvailableIv != null) {
+                noSongsAvailableIv.setVisibility(View.VISIBLE);
+            }
+        } else {
+            if (noSongsAvailableIv != null) {
+                noSongsAvailableIv.setVisibility(View.GONE);
+            }
+        }
     }
 
     public List<Song> getSongList() {
@@ -659,6 +690,10 @@ public class MusicService extends Service
 
     public void setMainControlBarArtist(TextView mainControlBarArtist) {
         this.mainControlBarArtist = mainControlBarArtist;
+    }
+
+    public void setNoSongsAvailableIv(ImageView noSongsAvailableIv) {
+        this.noSongsAvailableIv = noSongsAvailableIv;
     }
 
     public void setMainFinishBtn(Button mainFinishBtn) {
