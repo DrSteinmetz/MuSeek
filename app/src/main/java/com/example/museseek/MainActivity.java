@@ -1,7 +1,6 @@
 package com.example.museseek;
 
 import android.Manifest;
-import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +15,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -85,8 +83,6 @@ public class MainActivity extends AppCompatActivity {
     private final int CAMERA_REQUEST = 1;
     private final int GALLERY_REQUEST = 2;
     private final int WRITE_PERMISSION_REQUEST = 7;
-
-    private final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -421,17 +417,17 @@ public class MainActivity extends AppCompatActivity {
                     "http://www.syntax.org.il/xtra/bob2.mp3",
                     "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
 
-            Song song_3 = new Song("One More Cup Of Coffee", "Bob Dylan",
-                    "http://www.syntax.org.il/xtra/bob.m4a",
-                    "https://www.needsomefun.net/wp-content/uploads/2015/09/one_more_cup_of_cofee.jpg");
+            Song song_3 = new Song("Guaranteed", "Eddie Vedder",
+                    "https://www.mboxdrive.com/Eddie%20Vedder%20-%20Guaranteed.mp3",
+                    "https://www.musicmaniarecords.be/media/coverart-big/17951-into-the-wild.jpg");
 
-            Song song_4 = new Song("Sara", "Bob Dylan",
-                    "http://www.syntax.org.il/xtra/bob1.m4a",
-                    "https://images.rapgenius.com/f9fa75848596b53395fe7f6ccd25844c.619x414x1.jpg");
+            Song song_4 = new Song("Closing Time", "Semisonic",
+                    "https://www.mboxdrive.com/Semisonic%20-%20Closing%20Time.mp3",
+                    "https://img.discogs.com/_Tm33mfoOsUd2SCwAy_QTq0DppE=/fit-in/600x524/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/R-1146898-1580504265-6407.jpeg.jpg");
 
-            Song song_5 = new Song("The Man In Me", "Bob Dylan",
-                    "http://www.syntax.org.il/xtra/bob2.mp3",
-                    "https://i.ytimg.com/vi/94jPU2gc1E0/maxresdefault.jpg");
+            Song song_5 = new Song("Stay", "Thirty Seconds to Mars",
+                    "https://www.mboxdrive.com/Thirty%20Seconds%20To%20Mars%20-%20Stay.mp3",
+                    "https://a4-images.myspacecdn.com/images04/1/3881ba327864444b96011406b381fac3/600x600.jpg");
 
             mSongs.add(song_0);
             mSongs.add(song_1);
@@ -441,8 +437,6 @@ public class MainActivity extends AppCompatActivity {
             mSongs.add(song_5);
 
             mSharedPreferences.edit().putBoolean("is_first_use", false).commit();
-
-            saveSongsToFile(); //TODO: Remove to onPause when done developing!!!!!!!!
         } else {
             readSongsFromFile();
         }
@@ -629,7 +623,7 @@ public class MainActivity extends AppCompatActivity {
         btn_camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mFile = new File(Environment.getExternalStorageDirectory(),
+                mFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES),
                         "museek" + System.nanoTime() + "pic.jpg");
                 mSelectedImage = FileProvider.getUriForFile(MainActivity.this,
                         "com.example.museseek.provider", mFile);
@@ -658,8 +652,22 @@ public class MainActivity extends AppCompatActivity {
                 /**<-------Checks if the user entered all the details------->*/
                 if (songName.trim().length() < 1 || songArtist.trim().length() < 1
                         || songURL.trim().length() < 1) {
-                    Toast.makeText(MainActivity.this, R.string.dlg_add_error, Toast.LENGTH_SHORT).show();
+                    if (songName.trim().length() < 1) {
+                        name_et.setError(getString(R.string.dlg_add_name_error));
+                    } else { name_et.setError(null); }
+
+                    if (songArtist.trim().length() < 1) {
+                        artist_et.setError(getString(R.string.dlg_add_artist_error));
+                    } else { artist_et.setError(null); }
+
+                    if (songURL.trim().length() < 1) {
+                        url_et.setError(getString(R.string.dlg_add_url_error));
+                    } else { url_et.setError(null); }
                 } else {
+                    name_et.setError(null);
+                    artist_et.setError(null);
+                    url_et.setError(null);
+
                     /**<-------Checks if the user entered a valid URL------->*/
                     if (Patterns.WEB_URL.matcher(songURL).matches()) {
                         Song song = new Song(songName, songArtist, songURL, photoUri);
@@ -673,7 +681,9 @@ public class MainActivity extends AppCompatActivity {
                         mSelectedImage = null;
                         alertDialog.dismiss();
                     } else {
-                        Toast.makeText(MainActivity.this, R.string.dlg_add_bad_url, Toast.LENGTH_SHORT).show();
+                        name_et.setError(null);
+                        artist_et.setError(null);
+                        url_et.setError(getString(R.string.dlg_add_bad_url));
                     }
                 }
             }
@@ -774,7 +784,7 @@ public class MainActivity extends AppCompatActivity {
                 /**<-------Checks if the user entered all the details------->*/
                 if (songName.trim().length() < 1 || songArtist.trim().length() < 1
                         || songURL.trim().length() < 1) {
-                    Toast.makeText(MainActivity.this, R.string.dlg_add_error, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.dlg_add_name_error, Toast.LENGTH_SHORT).show();
                 } else {
                     /**<-------Checks if the user entered a valid URL------->*/
                     if (Patterns.WEB_URL.matcher(songURL).matches()) {

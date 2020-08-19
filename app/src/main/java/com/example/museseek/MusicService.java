@@ -7,15 +7,14 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -82,8 +81,6 @@ public class MusicService extends Service
     private Runnable mRunnable;
 
 
-    private final String TAG = "MusicService";
-
     public class ServiceBinder extends Binder {
         MusicService getService() {
             return MusicService.this;
@@ -121,8 +118,6 @@ public class MusicService extends Service
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getStringExtra("action");
-
-        Log.d(TAG, "onStartCommand - Action: " + action);
 
         if (mMediaPlayer != null && !mSongs.isEmpty()) {
             switch (action) {
@@ -357,8 +352,7 @@ public class MusicService extends Service
         builder.setPriority(Notification.PRIORITY_MAX).setContentTitle(getString(R.string.app_name))
                 .setSmallIcon(R.drawable.ic_museek_notif_icon)
                 .setOnlyAlertOnce(true)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_museek_icon));
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
         mRemoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
 
@@ -391,7 +385,7 @@ public class MusicService extends Service
                 4, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(activityPendingIntent);
 
-        builder.setCustomBigContentView(mRemoteViews);
+        builder.setCustomContentView(mRemoteViews);
 
         mNotification = builder.build();
         mNotification.flags |= Notification.FLAG_NO_CLEAR;
@@ -569,27 +563,40 @@ public class MusicService extends Service
         return finalTimerString;
     }
 
-    private boolean isInternetAvailable(){
-        boolean have_WIFI= false;
-        boolean have_MobileData = false;
-
+    private boolean isInternetAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo[] networkInfos = connectivityManager.getAllNetworkInfo();
 
-        for(NetworkInfo info : networkInfos) {
-            if (info.getTypeName().equalsIgnoreCase("WIFI")) {
-                if (info.isConnected()) {
-                    have_WIFI = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Network network = null;
+
+            if (connectivityManager == null) {
+                return false;
+            } else {
+                network = connectivityManager.getActiveNetwork();
+                NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(network);
+
+                if (networkCapabilities == null) {
+                    return false;
+                }
+
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    return true;
                 }
             }
-
-            if (info.getTypeName().equalsIgnoreCase("MOBILE DATA")) {
-                if (info.isConnected()) {
-                    have_MobileData = true;
-                }
+        } else {
+            if (connectivityManager == null) {
+                return false;
             }
+
+            if (connectivityManager.getActiveNetworkInfo() == null) {
+                return false;
+            }
+
+            return connectivityManager.getActiveNetworkInfo().isConnected();
         }
-        return have_WIFI || have_MobileData;
+
+        return false;
     }
 
     private boolean handleInternetConnectivity() {
@@ -598,6 +605,7 @@ public class MusicService extends Service
         /**<-------If there's no internet let the user know and kill the app------->**/
         if (!isInternetAvailable()) {
             Toast.makeText(this, R.string.no_internet_msg, Toast.LENGTH_SHORT).show();
+
             if (mIsInitialized) {
                 stopForeground(true);
                 stopSelf();
@@ -610,6 +618,7 @@ public class MusicService extends Service
             if (pageFinishBtn != null) {
                 pageFinishBtn.performClick();
             }
+
             connectivity = false;
         }
 
@@ -740,7 +749,5 @@ public class MusicService extends Service
         }
 
         mIsPlaying = mIsInitialized = false;
-
-        Log.d(TAG, "onDestroy");
     }
 }

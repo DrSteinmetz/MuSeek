@@ -39,9 +39,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/title_tv"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginVertical="5dp"
                 android:layout_marginHorizontal="30dp"
+                app:errorEnabled="true"
                 android:hint="@string/dlg_add_song_name_et">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -65,9 +65,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/song_name_layout"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginVertical="5dp"
                 android:layout_marginHorizontal="30dp"
+                app:errorEnabled="true"
                 android:hint="@string/dlg_add_song_artist_et">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -91,7 +91,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/song_artist_layout"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="5dp"
                 android:layout_marginBottom="40dp"
                 android:layout_marginHorizontal="30dp"
                 android:hint="@string/dlg_add_song_url_et">

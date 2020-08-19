@@ -12,7 +12,9 @@
     <string name="dlg_add_song_url_et">Song\'s URL</string>
     <string name="dlg_add_image_tv">Pick the Song\'s Image</string>
     <string name="dlg_add_gallery_pic">Select Image</string>
-    <string name="dlg_add_error">You must enter name, artist, and URL!</string>
+    <string name="dlg_add_name_error">You must enter the song\'s name!</string>
+    <string name="dlg_add_artist_error">You must enter the song\'s artist!</string>
+    <string name="dlg_add_url_error">You must enter the song\'s URL!</string>
     <string name="dlg_add_bad_url">Invalid URL!</string>
 
     <string name="dlg_edit_title_tv">Edit Your Song</string>

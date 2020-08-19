@@ -13,7 +13,9 @@
     <string name="dlg_add_song_url_et">קישור לשיר</string>
     <string name="dlg_add_image_tv">הוספת תמונה לשיר</string>
     <string name="dlg_add_gallery_pic">נא לבחור תמונה</string>
-    <string name="dlg_add_error">עליך להזין את שם השיר, שם האומן, וקישור לשיר!</string>
+    <string name="dlg_add_name_error">עליך להזין את שם השיר!</string>
+    <string name="dlg_add_artist_error">עליך להזין את שם האומן!</string>
+    <string name="dlg_add_url_error">עליך להזין קישור לשיר!</string>
     <string name="dlg_add_bad_url">הקישור אינו תקין!</string>
 
     <string name="dlg_edit_title_tv">עריכת שיר</string>

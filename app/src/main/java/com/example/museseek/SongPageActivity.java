@@ -8,7 +8,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.Button;
@@ -51,8 +50,6 @@ public class SongPageActivity extends AppCompatActivity {
     private TextView mSongTimerStart;
     private TextView mSongTimerEnd;
 
-    private final String TAG = "SongPage";
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +71,7 @@ public class SongPageActivity extends AppCompatActivity {
         mSongTimerEnd = findViewById(R.id.details_end_duration_tv);
 
         mPhotoIv = findViewById(R.id.details_iv);
+        mPhotoIv.setClipToOutline(true);
         mNameTv = findViewById(R.id.details_name_tv);
         mArtistTv = findViewById(R.id.details_artist_tv);
 
@@ -252,7 +250,6 @@ public class SongPageActivity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.d(TAG, "onServiceDisconnected");
             mService = null;
         }
     };
@@ -267,7 +264,6 @@ public class SongPageActivity extends AppCompatActivity {
     }
 
     private void doUnbindService() {
-        Log.d(TAG, "doUnbindService: " + mIsBound);
         if (mIsBound) {
             unbindService(serviceConnection);
             mIsBound = false;
@@ -321,14 +317,11 @@ public class SongPageActivity extends AppCompatActivity {
         if (mService != null) {
             if (mService.isPlaying()) {
                 mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-                Log.d(TAG, "Pause");
             } else {
                 mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
-                Log.d(TAG, "Play");
             }
         } else {
             mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_pause_white_100));
-            Log.d(TAG, "Default Pause");
         }
     }
 
@@ -337,8 +330,6 @@ public class SongPageActivity extends AppCompatActivity {
         super.onStart();
 
         doBindService();
-
-        Log.d(TAG, "onStart");
     }
 
     @Override
@@ -356,7 +347,6 @@ public class SongPageActivity extends AppCompatActivity {
         }
 
         doUnbindService();
-        Log.d(TAG, "onStop");
     }
 
     @Override
