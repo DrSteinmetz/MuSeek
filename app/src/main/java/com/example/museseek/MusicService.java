@@ -117,7 +117,11 @@ public class MusicService extends Service
     @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent.getStringExtra("action");
+        String action = "";
+
+        if (intent.hasExtra("action")) {
+            action = intent.getStringExtra("action");
+        }
 
         if (mMediaPlayer != null && !mSongs.isEmpty()) {
             switch (action) {

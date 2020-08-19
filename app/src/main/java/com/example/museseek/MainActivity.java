@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mNoSongsAvailableIv;
     private Button mFinishBtn;
 
-    private RelativeLayout dlgPicturesLayout;
+    private  ImageButton mDlgCameraBtn;
     private ImageView mDlgSelectedImageIv;
 
     private boolean mIsDarkMode;
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         /**<-------Initializing dark\light mode------->**/
-        mIsDarkMode = mSharedPreferences.getBoolean("is_dark_mode", false);
+        mIsDarkMode = mSharedPreferences.getBoolean("is_dark_mode", true);
         if (mIsDarkMode) {
             findViewById(R.id.main_layout).setBackgroundColor(getColor(R.color.colorGrey));
         } else {
@@ -361,9 +361,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == WRITE_PERMISSION_REQUEST) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                dlgPicturesLayout.setVisibility(View.VISIBLE);
+                mDlgCameraBtn.setVisibility(View.VISIBLE);
             } else {
-                dlgPicturesLayout.setVisibility(View.GONE);
+                mDlgCameraBtn.setVisibility(View.GONE);
             }
         }
     }
@@ -587,17 +587,16 @@ public class MainActivity extends AppCompatActivity {
         final TextView title_tv = view.findViewById(R.id.title_tv);
         title_tv.setText(R.string.dlg_add_title_tv);
 
-        final EditText name_et = view.findViewById(R.id.song_name_et);
-        final EditText artist_et = view.findViewById(R.id.song_artist_et);
-        final EditText url_et = view.findViewById(R.id.song_url_et);
-        final ImageButton btn_gallery = view.findViewById(R.id.btn_gallery);
-        final ImageButton btn_camera = view.findViewById(R.id.btn_camera);
-        final ImageButton btn_cancel = view.findViewById(R.id.btn_cancel);
-        final ImageButton btn_confirm = view.findViewById(R.id.btn_confirm);
+        final EditText nameEt = view.findViewById(R.id.song_name_et);
+        final EditText artistEt = view.findViewById(R.id.song_artist_et);
+        final EditText urlEt = view.findViewById(R.id.song_url_et);
+        final ImageButton galleryBtn = view.findViewById(R.id.btn_gallery);
+        mDlgCameraBtn = view.findViewById(R.id.btn_camera);
+        final ImageButton cancelBtn = view.findViewById(R.id.btn_cancel);
+        final ImageButton confirmBtn = view.findViewById(R.id.btn_confirm);
         mDlgSelectedImageIv = view.findViewById(R.id.selected_image_iv);
         mDlgSelectedImageIv.setClipToOutline(true);
         mDlgSelectedImageIv.setVisibility(View.GONE);
-        dlgPicturesLayout = view.findViewById(R.id.take_pic_layout);
 
         /**<-------Requesting user permissions------->**/
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -610,7 +609,7 @@ public class MainActivity extends AppCompatActivity {
 
         final AlertDialog alertDialog = builder.create();
 
-        btn_gallery.setOnClickListener(new View.OnClickListener() {
+        galleryBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_PICK,
@@ -620,7 +619,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btn_camera.setOnClickListener(new View.OnClickListener() {
+        mDlgCameraBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES),
@@ -633,40 +632,40 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btn_cancel.setOnClickListener(new View.OnClickListener() {
+        cancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 alertDialog.dismiss();
             }
         });
 
-        btn_confirm.setOnClickListener(new View.OnClickListener() {
+        confirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 /**<-------Add a song to the list------->*/
-                String songName = name_et.getText().toString();
-                String songArtist = artist_et.getText().toString();
-                String songURL = url_et.getText().toString();
+                String songName = nameEt.getText().toString();
+                String songArtist = artistEt.getText().toString();
+                String songURL = urlEt.getText().toString();
                 String photoUri = mSelectedImage != null ? mSelectedImage.toString() : null;
 
                 /**<-------Checks if the user entered all the details------->*/
                 if (songName.trim().length() < 1 || songArtist.trim().length() < 1
                         || songURL.trim().length() < 1) {
                     if (songName.trim().length() < 1) {
-                        name_et.setError(getString(R.string.dlg_add_name_error));
-                    } else { name_et.setError(null); }
+                        nameEt.setError(getString(R.string.dlg_add_name_error));
+                    } else { nameEt.setError(null); }
 
                     if (songArtist.trim().length() < 1) {
-                        artist_et.setError(getString(R.string.dlg_add_artist_error));
-                    } else { artist_et.setError(null); }
+                        artistEt.setError(getString(R.string.dlg_add_artist_error));
+                    } else { artistEt.setError(null); }
 
                     if (songURL.trim().length() < 1) {
-                        url_et.setError(getString(R.string.dlg_add_url_error));
-                    } else { url_et.setError(null); }
+                        urlEt.setError(getString(R.string.dlg_add_url_error));
+                    } else { urlEt.setError(null); }
                 } else {
-                    name_et.setError(null);
-                    artist_et.setError(null);
-                    url_et.setError(null);
+                    nameEt.setError(null);
+                    artistEt.setError(null);
+                    urlEt.setError(null);
 
                     /**<-------Checks if the user entered a valid URL------->*/
                     if (Patterns.WEB_URL.matcher(songURL).matches()) {
@@ -681,9 +680,9 @@ public class MainActivity extends AppCompatActivity {
                         mSelectedImage = null;
                         alertDialog.dismiss();
                     } else {
-                        name_et.setError(null);
-                        artist_et.setError(null);
-                        url_et.setError(getString(R.string.dlg_add_bad_url));
+                        nameEt.setError(null);
+                        artistEt.setError(null);
+                        urlEt.setError(getString(R.string.dlg_add_bad_url));
                     }
                 }
             }
@@ -711,13 +710,12 @@ public class MainActivity extends AppCompatActivity {
         final EditText artist_et = view.findViewById(R.id.song_artist_et);
         final EditText url_et = view.findViewById(R.id.song_url_et);
         final ImageButton btn_gallery = view.findViewById(R.id.btn_gallery);
-        final ImageButton btn_camera = view.findViewById(R.id.btn_camera);
+        mDlgCameraBtn = view.findViewById(R.id.btn_camera);
         final ImageButton btn_cancel = view.findViewById(R.id.btn_cancel);
         final ImageButton btn_confirm = view.findViewById(R.id.btn_confirm);
         mDlgSelectedImageIv = view.findViewById(R.id.selected_image_iv);
         mDlgSelectedImageIv.setClipToOutline(true);
         mDlgSelectedImageIv.setVisibility(View.VISIBLE);
-        dlgPicturesLayout = view.findViewById(R.id.take_pic_layout);
 
         /**<-------Requesting user permissions------->**/
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -749,7 +747,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btn_camera.setOnClickListener(new View.OnClickListener() {
+        mDlgCameraBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mFile = new File(Environment.getExternalStorageDirectory(),
