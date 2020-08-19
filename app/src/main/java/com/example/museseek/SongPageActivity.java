@@ -121,6 +121,8 @@ public class SongPageActivity extends AppCompatActivity {
                     Intent intent = new Intent(SongPageActivity.this, MusicService.class);
                     intent.putExtra("action", "next");
                     startService(intent);
+                    /**<-------If the user pressed 'next' cancel repeat mode------->**/
+                    mService.setIsRepeat(false);
                 }
             }
         });
@@ -161,6 +163,8 @@ public class SongPageActivity extends AppCompatActivity {
                     Intent intent = new Intent(SongPageActivity.this, MusicService.class);
                     intent.putExtra("action", "previous");
                     startService(intent);
+                    /**<-------If the user pressed 'previous' cancel repeat mode------->**/
+                    mService.setIsRepeat(false);
                 }
             }
         });
