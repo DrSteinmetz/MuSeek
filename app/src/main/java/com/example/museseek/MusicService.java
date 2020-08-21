@@ -108,6 +108,7 @@ public class MusicService extends Service
             public void run() {
                 if (pageSeekBar != null && mMediaPlayer.getDuration() > 0) {
                     pageSeekBar.setProgress(mMediaPlayer.getCurrentPosition(), true);
+                    pageTimerStartTv.setText(milliSecondsToTimer(mMediaPlayer.getCurrentPosition()));
                 }
                 mHandler.postDelayed(mRunnable, 1000);
             }
@@ -410,10 +411,6 @@ public class MusicService extends Service
             pageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    if (mMediaPlayer != null && !fromUser) {
-                        pageTimerStartTv.setText(milliSecondsToTimer(mMediaPlayer.getCurrentPosition()));
-                    }
-
                     if (fromUser) {
                         pageTimerStartTv.setText(milliSecondsToTimer(progress));
                     }
