@@ -298,7 +298,6 @@ public class MainActivity extends AppCompatActivity {
                     initializeControlBar();
                 } else {
                     mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
-                    mControlBarName.setText(R.string.main_control_bar_song_name_tv);
                 }
             } else {
                 mPlayBtn.setImageDrawable(getDrawable(R.drawable.ic_round_play_arrow_white_100));
