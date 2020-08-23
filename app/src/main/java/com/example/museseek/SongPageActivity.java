@@ -248,7 +248,6 @@ public class SongPageActivity extends AppCompatActivity {
 
             initializePlayButton();
 
-            /**<-------Initializing the SeekBar------->**/
             mService.initializeSeekBar();
         }
 
@@ -351,6 +350,8 @@ public class SongPageActivity extends AppCompatActivity {
         }
 
         doUnbindService();
+
+        finish();
     }
 
     @Override
