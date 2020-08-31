@@ -31,18 +31,18 @@
                 android:textSize="25sp"
                 android:textColor="@color/colorAccent"
                 android:textStyle="bold"
-                android:textAllCaps="false"/>
+                android:textAllCaps="false" />
 
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/song_name_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="75dp"
                 android:layout_below="@id/title_tv"
+                android:gravity="bottom"
                 android:layout_marginVertical="5dp"
                 android:layout_marginHorizontal="30dp"
-                app:errorEnabled="true"
-                android:hint="@string/dlg_add_song_name_et">
+                app:errorEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/song_name_et"
@@ -51,11 +51,12 @@
                     android:padding="5dp"
                     android:gravity="center"
                     android:maxLines="1"
-                    android:inputType="text"
+                    android:hint="@string/dlg_add_song_name_et"
                     android:textSize="20sp"
                     android:textColor="@color/colorPrimary"
+                    android:inputType="text"
                     android:background="@drawable/edit_text_selector"
-                    android:textCursorDrawable="@color/colorPrimary"/>
+                    android:textCursorDrawable="@color/colorPrimary" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -63,12 +64,12 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/song_artist_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="75dp"
                 android:layout_below="@id/song_name_layout"
+                android:gravity="bottom"
                 android:layout_marginVertical="5dp"
                 android:layout_marginHorizontal="30dp"
-                app:errorEnabled="true"
-                android:hint="@string/dlg_add_song_artist_et">
+                app:errorEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/song_artist_et"
@@ -77,11 +78,12 @@
                     android:padding="5dp"
                     android:gravity="center"
                     android:maxLines="1"
-                    android:inputType="text"
+                    android:hint="@string/dlg_add_song_artist_et"
                     android:textSize="20sp"
                     android:textColor="@color/colorPrimary"
+                    android:inputType="text"
                     android:background="@drawable/edit_text_selector"
-                    android:textCursorDrawable="@color/colorPrimary"/>
+                    android:textCursorDrawable="@color/colorPrimary" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -89,25 +91,27 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/song_url_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="75dp"
                 android:layout_below="@id/song_artist_layout"
+                android:gravity="bottom"
                 android:layout_marginTop="5dp"
-                android:layout_marginBottom="40dp"
                 android:layout_marginHorizontal="30dp"
-                android:hint="@string/dlg_add_song_url_et">
+                android:layout_marginBottom="40dp"
+                app:errorEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/song_url_et"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="3dp"
+                    android:padding="5dp"
                     android:gravity="center"
                     android:maxLines="1"
-                    android:inputType="textUri"
+                    android:hint="@string/dlg_add_song_url_et"
                     android:textSize="20sp"
                     android:textColor="@color/colorPrimary"
+                    android:inputType="textUri"
                     android:background="@drawable/edit_text_selector"
-                    android:textCursorDrawable="@color/colorPrimary"/>
+                    android:textCursorDrawable="@color/colorPrimary" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -131,7 +135,7 @@
                     android:textStyle="italic"
                     android:textAllCaps="false"
                     android:gravity="center"
-                    android:layout_centerHorizontal="true"/>
+                    android:layout_centerHorizontal="true" />
 
                 <LinearLayout
                     android:id="@+id/pic_buttons_layout"
@@ -148,7 +152,7 @@
                         android:layout_height="50dp"
                         android:src="@drawable/dlg_gallery_btn_selector"
                         android:background="@color/colorTransparent"
-                        android:scaleType="fitXY"/>
+                        android:scaleType="fitXY" />
 
                     <ImageButton
                         android:id="@+id/btn_camera"
@@ -158,7 +162,7 @@
                         android:layout_marginStart="30dp"
                         android:src="@drawable/dlg_camera_btn_selector"
                         android:background="@color/colorTransparent"
-                        android:scaleType="fitXY"/>
+                        android:scaleType="fitXY" />
 
                 </LinearLayout>
 
@@ -170,7 +174,7 @@
                     android:layout_below="@id/pic_buttons_layout"
                     android:background="@drawable/rounded_shape"
                     android:scaleType="centerCrop"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
 
             </RelativeLayout>
 
@@ -185,7 +189,7 @@
             android:layout_toStartOf="@id/btn_dummy"
             android:src="@drawable/dlg_x_btn_selector"
             android:background="@color/colorTransparent"
-            android:scaleType="fitCenter"/>
+            android:scaleType="fitCenter" />
 
         <ImageView
             android:id="@+id/btn_dummy"
@@ -194,7 +198,7 @@
             android:layout_alignBottom="@id/layoutDialog"
             android:layout_marginBottom="-23dp"
             android:layout_marginHorizontal="25dp"
-            android:layout_centerHorizontal="true"/>
+            android:layout_centerHorizontal="true" />
 
         <ImageButton
             android:id="@+id/btn_confirm"
@@ -204,7 +208,7 @@
             android:layout_toEndOf="@id/btn_dummy"
             android:src="@drawable/dlg_v_btn_selector"
             android:background="@color/colorTransparent"
-            android:scaleType="fitCenter"/>
+            android:scaleType="fitCenter" />
 
     </RelativeLayout>
 
